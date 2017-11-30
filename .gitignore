@@ -1,0 +1,24 @@
+*~
+
+# Mac OSX folder properties
+.DS_Store
+
+*.so
+*.o
+*.a
+
+# doxygen output
+doxygen-build/
+
+# etags
+TAGS
+
+# documentation artifacts
+docs/*.html
+
+# profiling
+callgrind.out*
+*.gcno
+*.gcda
+
+main
