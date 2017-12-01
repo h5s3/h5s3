@@ -3,14 +3,10 @@
 #include <cstring>
 #include <list>
 #include <memory>
-#include <optional>
-#include <stdexcept>
 #include <string_view>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-
-#include "H5public.h"
 
 namespace h5s3 {
 namespace page {

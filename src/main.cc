@@ -3,13 +3,13 @@
 #include "h5s3/private/page.h"
 
 int main(int, char **) {
-    constexpr hsize_t page_size = 10;
-    std::unordered_map<haddr_t, std::string> map;
+    constexpr std::size_t page_size = 10;
+    std::unordered_map<std::size_t, std::string> map;
 
-    auto write_page = [&](haddr_t id, const std::string_view& data) {
+    auto write_page = [&](std::size_t id, const std::string_view& data) {
         map[id] = data;
     };
-    auto read_page = [&](haddr_t id) {
+    auto read_page = [&](std::size_t id) {
         std::string& data = map[id];
         if (!data.size()) {
             data.resize(page_size, '-');
