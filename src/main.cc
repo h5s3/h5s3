@@ -1,34 +1,61 @@
 #include <iostream>
-#include "h5s3/private/curl.h"
-#include "h5s3/private/page.h"
+
+#include "hdf5.h"
+
+#include "h5s3/driver.h"
 
 int main(int, char **) {
-    constexpr std::size_t page_size = 10;
-    std::unordered_map<std::size_t, std::string> map;
+    H5open();
 
-    auto write_page = [&](std::size_t id, const std::string_view& data) {
-        map[id] = data;
-    };
-    auto read_page = [&](std::size_t id) {
-        std::string& data = map[id];
-        if (!data.size()) {
-            data.resize(page_size, '-');
+    hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+    h5s3::driver::h5s3_set_fapl(fapl);
+    hid_t file =  H5Fcreate("ayy.lmao", H5F_ACC_RDWR, H5P_DEFAULT, fapl);
+    H5Pclose(fapl);
+
+    // hsize_t dims[2];
+    // dims[0] = 4;
+    // dims[1] = 6;
+    // hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
+    // hid_t dataset_id = H5Dcreate2(file,
+    //                               "/dataset",
+    //                               H5T_STD_I32BE,
+    //                               dataspace_id,
+    //                               H5P_DEFAULT,
+    //                               H5P_DEFAULT,
+    //                               H5P_DEFAULT);
+
+    int dset_data[4][6];
+    // for (int i = 0; i < 4; ++i) {
+    //     for (int j = 0; j < 6; ++j) {
+    //         dset_data[i][j] = n
+    //     }
+    // }
+
+    // H5Dwrite(dataset_id,
+    //          H5T_NATIVE_INT,
+    //          H5S_ALL,
+    //          H5S_ALL,
+    //          H5P_DEFAULT,
+    //          dset_data);
+
+    hid_t dataset_id = H5Dopen2(file, "/dataset", H5P_DEFAULT);
+
+    H5Dread(dataset_id,
+            H5T_NATIVE_INT,
+            H5S_ALL,
+            H5S_ALL,
+            H5P_DEFAULT,
+            dset_data);
+
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            std::cout << '(' << i << ", " << j << "): "
+                      << dset_data[i][j] << '\n';
         }
+    }
 
-        auto ptr = std::make_unique<char[]>(page_size);
-        std::memcpy(ptr.get(), data.data(), page_size);
-        return ptr;
-    };
+    H5Dclose(dataset_id);
+    H5Fclose(file);
 
-    h5s3::page::table table(read_page, write_page, page_size, 4);
-
-    table.write(5, "abc");
-    table.write(15, "def");
-
-    std::string buffer;
-    buffer.resize(30);
-    table.read_into(2, 30, buffer.data());
-
-    std::cout << buffer << '\n';
     return 0;
 }

@@ -48,9 +48,7 @@ private:
             return *this;
         }
 
-        void read_into(std::size_t addr,
-                       std::size_t size,
-                       char* buffer) const {
+        void read(std::size_t addr, std::size_t size, char* buffer) const {
             std::memcpy(buffer, &m_data[addr], size);
         }
 
@@ -107,8 +105,8 @@ private:
     }
 
 public:
-    table(read_page_callback_type read_page,
-          write_page_callback_type write_page,
+    table(const read_page_callback_type& read_page,
+          const write_page_callback_type& write_page,
           std::size_t page_size,
           std::size_t page_cache_size)
 
@@ -117,22 +115,28 @@ public:
           m_write_page(write_page),
           m_page_cache_size(page_cache_size) {}
 
-    void read_into(std::size_t addr,
-                   std::size_t size,
-                   char* buffer) const {
+    table(table&& mvfrom)
+        : m_page_size(mvfrom.m_page_size),
+          m_read_page(mvfrom.m_read_page),
+          m_write_page(mvfrom.m_write_page),
+          m_page_cache_size(mvfrom.m_page_cache_size),
+          m_lru_order(std::move(mvfrom.m_lru_order)),
+          m_page_cache(std::move(mvfrom.m_page_cache)) {}
+
+    void read(std::size_t addr, std::size_t size, char* buffer) const {
         std::size_t min_page = addr / m_page_size;
         std::size_t max_page = (addr + size) / m_page_size;
 
         std::size_t min_page_start = min_page * m_page_size;
         std::size_t min_page_offset = addr - min_page_start;
         std::size_t read_size = std::min(m_page_size - min_page_offset, size);
-        read_page(min_page).read_into(min_page_offset, read_size, buffer);
+        read_page(min_page).read(min_page_offset, read_size, buffer);
 
         if (min_page != max_page) {
             std::size_t max_page_start = max_page * m_page_size;
             std::size_t offset = max_page_start - addr;
             std::size_t read_size = addr + size - max_page_start;
-            read_page(max_page).read_into(0, read_size, buffer + offset);
+            read_page(max_page).read(0, read_size, buffer + offset);
         }
 
         for (std::size_t page_id = min_page + 1;
@@ -140,7 +144,7 @@ public:
              ++page_id) {
             std::size_t page_start = page_id * m_page_size;
             std::size_t offset = page_start - addr;
-            read_page(page_id).read_into(0, m_page_size, buffer + offset);
+            read_page(page_id).read(0, m_page_size, buffer + offset);
         }
     }
 
