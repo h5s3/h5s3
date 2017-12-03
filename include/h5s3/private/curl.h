@@ -3,11 +3,14 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "curl/curl.h"
 
-namespace h5s3 {
-namespace curl {
+namespace h5s3::curl {
+
+typedef std::pair<std::string_view, std::string_view> header;
+typedef std::pair<std::string_view, std::string_view> query_param;
 
 class curl_deleter {
 public:
@@ -19,7 +22,7 @@ public:
 
 class error : public std::runtime_error {
 public:
-    error(const std::string& message) : std::runtime_error(message) {}
+    explicit error(const std::string& message) : std::runtime_error(message) {}
 };
 
 class session {
@@ -32,7 +35,11 @@ public:
             throw error("Failed to initialize curl request.");
         }
     }
-    std::string get(const std::string& url) const;
+    std::string get(const std::string_view& url,
+                    const std::vector<header>& headers) const;
+
+    std::string put(const std::string_view& url,
+                    const std::vector<header>& headers,
+                    const std::string_view& content) const;
 };
-}  // namespace curl
-}  // namespace h5s3
+}  // namespace h5s3::curl

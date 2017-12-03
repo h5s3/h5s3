@@ -2,18 +2,7 @@
 
 namespace h5s3::hash {
 
-constexpr std::array<char, 16> hexcodes({'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'});
 
-/** Convert a sha256 hash digest to hexadecimal.
-*/
-sha256_hex to_hex(const sha256& hash){
-    sha256_hex result;
-    for (unsigned int i = 0; i < hash.size(); ++i){
-        result[2 * i] = hexcodes[(hash[i] & 0xF0) >> 4];
-        result[2 * i + 1] = hexcodes[hash[i] & 0x0F];
-    }
-    return result;
-}
 
 /* Generate a sha256 hexdigest of `data`.
    See https://tools.ietf.org/html/rfc4634.
@@ -24,7 +13,7 @@ sha256_hex sha256_hexdigest(const std::string_view& data) {
     return to_hex(hash);
 }
 
-#if OPENSSL_VERSION_NUMBER < 0x01010000L
+#if OPENSSL_VERSION_NUMBER <= 0x010100000
 /** RAII struct for OpenSSL HMAC_CTX.
  */
 class hmac_context final {
@@ -66,8 +55,8 @@ public:
 /* Generate a sha256 HMAC hexdigest from `data`.
    See https://tools.ietf.org/html/rfc4868.
 */
-sha256_hex hmac_sha256_hexdigest(const std::string_view& key,
-                                 const std::string_view& data) {
+sha256 hmac_sha256(const std::string_view& key,
+                   const std::string_view& data) {
     hmac_context ctx;
 
 #if OPENSSL_VERSION_NUMBER < 0x01010000L
@@ -94,7 +83,7 @@ sha256_hex hmac_sha256_hexdigest(const std::string_view& key,
     if (!HMAC_Final(ctx.get(), hash.data(), &outlen)){
         throw error("Failed to finalize HMAC_CTX.");
     }
-
-    return to_hex(hash);
+    return hash;
 }
+
 } // namespace h5s3::hash
