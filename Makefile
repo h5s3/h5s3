@@ -1,3 +1,6 @@
+# Put custom environment stuff here.
+-include Makefile.local
+
 MAJOR_VERSION := 0
 MINOR_VERSION := 0
 MICRO_VERSION := 0
