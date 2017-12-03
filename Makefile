@@ -76,7 +76,7 @@ tests/%.o: tests/%.cc
 
 $(TESTRUNNER): gtest.a $(TEST_OBJECTS) $(SONAME)
 	$(CXX) -o $@ $(TEST_OBJECTS) gtest.a -I $(GTEST_DIR)/include \
-		-L. -lh5s3 $(LDFLAGS)
+		-lpthread -L. -lh5s3 $(LDFLAGS)
 
 gtest.o: $(GTEST_SRCS)
 	$(CXX) $(CXXFLAGS) -I $(GTEST_DIR) -I $(GTEST_DIR)/include -c \
