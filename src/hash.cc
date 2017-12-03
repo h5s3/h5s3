@@ -24,33 +24,62 @@ sha256_hex sha256_hexdigest(const std::string_view& data) {
     return to_hex(hash);
 }
 
+#if OPENSSL_VERSION_NUMBER < 0x01010000L
 /** RAII struct for OpenSSL HMAC_CTX.
  */
 class hmac_context final {
 private:
     HMAC_CTX m_ctx;
 public:
-    hmac_context(){
+    hmac_context() {
         HMAC_CTX_init(&m_ctx);
     }
 
-    ~hmac_context(){
+    ~hmac_context() {
         HMAC_CTX_cleanup(&m_ctx);
     }
 
-    HMAC_CTX* get(){
+    HMAC_CTX* get() {
         return &m_ctx;
     };
 };
+#else
+/** RAII struct for OpenSSL HMAC_CTX.
+ */
+class hmac_context final {
+private:
+    HMAC_CTX* m_ctx;
+public:
+    hmac_context() : m_ctx(HMAC_CTX_new()) {}
+
+    ~hmac_context() {
+        HMAC_CTX_free(m_ctx);
+    }
+
+    HMAC_CTX* get() {
+        return m_ctx;
+    };
+};
+#endif  // OPENSSL_VERSION < 0x01010000
+
 
 /* Generate a sha256 HMAC hexdigest from `data`.
    See https://tools.ietf.org/html/rfc4868.
 */
 sha256_hex hmac_sha256_hexdigest(const std::string_view& key,
-                                 const std::string_view& data){
+                                 const std::string_view& data) {
     hmac_context ctx;
 
-    if (!HMAC_Init(ctx.get(), key.data(), key.size(), EVP_sha256())){
+#if OPENSSL_VERSION_NUMBER < 0x01010000L
+    int result = HMAC_Init(ctx.get(), key.data(), key.size(), EVP_sha256());
+#else
+    int result = HMAC_Init_ex(ctx.get(),
+                              key.data(),
+                              key.size(),
+                              EVP_sha256(),
+                              nullptr);
+#endif
+    if (!result) {
         throw error("Failed to init HMAC_CTX.");
     }
 
