@@ -24,3 +24,6 @@ a.out
 
 # etags
 TAGS
+
+# Local makefile overrides.
+Makefile.local
