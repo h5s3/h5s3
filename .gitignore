@@ -5,7 +5,7 @@
 
 
 # test runner built with `make test`
-test/run
+tests/run
 
 # doc artifacts
 html/*
