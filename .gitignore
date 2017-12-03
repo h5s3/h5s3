@@ -3,23 +3,24 @@
 # Mac OSX folder properties
 .DS_Store
 
-*.so
+
+# test runner built with `make test`
+test/run
+
+# doc artifacts
+html/*
+
+# scratch file for testing linking
+scratch.cc
+a.out
+
+# compiled artifacts
 *.o
 *.a
+*.so*
 
-# doxygen output
-doxygen-build/
+# gcc header dependencies
+*.d
 
 # etags
 TAGS
-
-# documentation artifacts
-docs/*.html
-
-# profiling
-callgrind.out*
-*.gcno
-*.gcda
-
-main
-a.out
