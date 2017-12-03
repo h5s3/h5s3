@@ -15,8 +15,9 @@ else
 	EXTRA_LDFLAGS :=
 endif
 
-CXXFLAGS := -std=gnu++17 -Wall -Wextra -O3 -g
-LDFLAGS := $(EXTRA_LDFLAGS) -lcurl -lcrypto -l$(HDF5_LIBRARY)
+OPTLEVEL ?= 3
+CXXFLAGS := -std=gnu++17 -Wall -Wextra -O$(OPTLEVEL) -g
+LDFLAGS := $(EXTRA_LDFLAGS) -lcurl -lcrypto -lstdc++fs -l$(HDF5_LIBRARY)
 INCLUDE_DIRS := include/ $(HDF5_INCLUDE_PATH)
 INCLUDE := $(foreach d,$(INCLUDE_DIRS), -I$d)
 LIBRARY := h5s3
@@ -35,10 +36,10 @@ SOURCES := $(wildcard src/*.cc)
 OBJECTS := $(SOURCES:.cc=.o)
 DFILES :=  $(SOURCES:.cc=.d)
 
-EXAMPLE_SOURCES := $(wildcard src/*.cc)
+EXAMPLE_SOURCES := $(wildcard examples/*.cc)
 EXAMPLE_OBJECTS := $(EXAMPLE_SOURCES:.cc=.o)
 EXAMPLE_DFILES :=  $(EXAMPLE_SOURCES:.cc=.d)
-
+EXAMPLES := $(EXAMPLE_SOURCES:.cc=)
 
 GTEST_ROOT:= submodules/googletest
 GTEST_DIR := $(GTEST_ROOT)/googletest
@@ -77,8 +78,11 @@ examples/%.o: examples/%.cc
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MD -fPIC -c $< -o $@
 
 examples/%: examples/%.o $(SONAME)
-	$(CXX) -o $@ $< -L. -lh5s3 $(LDFLAGS)
-	./$@
+	$(CXX) -o $@ $< -L. -l$(LIBRARY) $(LDFLAGS)
+
+.PHONY: example-%
+example-%: examples/%
+	LD_LIBRARY_PATH=. $<
 
 .PHONY: test
 test: $(TESTRUNNER)
@@ -89,7 +93,7 @@ tests/%.o: tests/%.cc
 
 $(TESTRUNNER): gtest.a $(TEST_OBJECTS) $(SONAME)
 	$(CXX) -o $@ $(TEST_OBJECTS) gtest.a -I $(GTEST_DIR)/include \
-		-lpthread -L. -lh5s3 $(LDFLAGS)
+		-lpthread -L. -l$(LIBRARY) $(LDFLAGS)
 
 gtest.o: $(GTEST_SRCS)
 	$(CXX) $(CXXFLAGS) -I $(GTEST_DIR) -I $(GTEST_DIR)/include -c \
@@ -102,7 +106,7 @@ gtest.a: gtest.o
 .PHONY: clean
 clean:
 	@rm -f $(SONAME) $(SHORT_SONAME) $(OBJECTS) $(DFILES) \
-		$(EXAMPLE_OBJECTS) $(EXAMPLE_DFILES) \
+		$(EXAMPLES) $(EXAMPLE_OBJECTS) $(EXAMPLE_DFILES) \
 		$(TESTRUNNER) $(TEST_OBJECTS) $(TEST_DFILES) \
 		gtest.o gtest.a
 
