@@ -8,11 +8,11 @@ constexpr std::array<unsigned char, sizeof...(cs)> operator ""_arr() {
 }
 
 TEST(hash, sha256) {
-    auto result = h5s3::hash::sha256_hex("foobar");
+    auto result = h5s3::hash::sha256_hexdigest("foobar");
     auto expected = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"_arr;
     EXPECT_EQ(result, expected);
 
-    result = h5s3::hash::sha256_hex("");
+    result = h5s3::hash::sha256_hexdigest("");
     expected = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"_arr;
     EXPECT_EQ(result, expected);
 
@@ -20,7 +20,7 @@ TEST(hash, sha256) {
     for (int i = 0; i < 10000; ++i){
         big.append("ayy");
     }
-    result = h5s3::hash::sha256_hex(big);
+    result = h5s3::hash::sha256_hexdigest(big);
     expected = "a5998ec09917cd0197ce475e2f4c36e8cdcca423edd983394532fc9458d49cff"_arr;
     EXPECT_EQ(result, expected);
 }

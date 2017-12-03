@@ -6,8 +6,8 @@ constexpr std::array<char, 16> hexcodes({'0','1','2','3','4','5','6','7','8','9'
 
 /** Convert a sha256 hash digest to hexadecimal.
 */
-sha256_hexdigest to_hex(const sha256& hash){
-    sha256_hexdigest result;
+sha256_hex to_hex(const sha256& hash){
+    sha256_hex result;
     for (unsigned int i = 0; i < hash.size(); ++i){
         result[2 * i] = hexcodes[(hash[i] & 0xF0) >> 4];
         result[2 * i + 1] = hexcodes[hash[i] & 0x0F];
@@ -18,7 +18,7 @@ sha256_hexdigest to_hex(const sha256& hash){
 /* Generate a sha256 hexdigest of `data`.
    See https://tools.ietf.org/html/rfc4634.
  */
-sha256_hexdigest sha256_hex(const std::string_view& data) {
+sha256_hex sha256_hexdigest(const std::string_view& data) {
     sha256 hash;
     SHA256(reinterpret_cast<const unsigned char *>(data.data()), data.size(), hash.data());
     return to_hex(hash);
@@ -46,8 +46,8 @@ public:
 /* Generate a sha256 HMAC hexdigest from `data`.
    See https://tools.ietf.org/html/rfc4868.
 */
-sha256_hexdigest hmac_sha256_hexdigest(const std::string_view& key,
-                                       const std::string_view& data){
+sha256_hex hmac_sha256_hexdigest(const std::string_view& key,
+                                 const std::string_view& data){
     hmac_context ctx;
 
     if (!HMAC_Init(ctx.get(), key.data(), key.size(), EVP_sha256())){
