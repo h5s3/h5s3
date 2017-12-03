@@ -2,11 +2,13 @@
 
 namespace h5s3::hash {
 
+constexpr std::array<char, 16> hexcodes({'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'});
+
 /** Convert a sha256 hash digest to hexadecimal.
 */
 sha256_hexdigest to_hex(const sha256& hash){
     sha256_hexdigest result;
-    for(unsigned int i = 0; i < hash.size(); ++i){
+    for (unsigned int i = 0; i < hash.size(); ++i){
         result[2 * i] = hexcodes[(hash[i] & 0xF0) >> 4];
         result[2 * i + 1] = hexcodes[hash[i] & 0x0F];
     }
@@ -24,7 +26,7 @@ sha256_hexdigest sha256_hex(const std::string_view& data) {
 
 /** RAII struct for OpenSSL HMAC_CTX.
  */
-struct hmac_context {
+class hmac_context final {
 private:
     HMAC_CTX m_ctx;
 public:
@@ -66,4 +68,4 @@ sha256_hexdigest hmac_sha256_hexdigest(const std::string_view& key,
 
     return to_hex(hash);
 }
-} // h5s3::hash
+} // namespace h5s3::hash
