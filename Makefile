@@ -2,9 +2,19 @@ MAJOR_VERSION := 0
 MINOR_VERSION := 0
 MICRO_VERSION := 0
 
+HDF5_INCLUDE_PATH ?=
+HDF5_LIBRARY_PATH ?=
+HDF5_LIBRARY ?= hdf5
+
+ifneq ($(HDF5_LIBRARY_PATH),)
+	EXTRA_LDFLAGS := -L$(HDF5_LIBRARY_PATH)
+else
+	EXTRA_LDFLAGS :=
+endif
+
 CXXFLAGS := -std=gnu++17 -Wall -Wextra -O3 -g
-LDFLAGS := -lcurl -lhdf5
-INCLUDE_DIRS := include/
+LDFLAGS := $(EXTRA_LDFLAGS) -lcurl -lcrypto -l$(HDF5_LIBRARY)
+INCLUDE_DIRS := include/ $(HDF5_INCLUDE_PATH)
 INCLUDE := $(foreach d,$(INCLUDE_DIRS), -I$d)
 LIBRARY := h5s3
 SHORT_SONAME := lib$(LIBRARY).so
