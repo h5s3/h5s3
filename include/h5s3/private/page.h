@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "h5s3/private/out_buffer.h"
+
 namespace h5s3::page {
 
 /** The identifier for a given memory page.
@@ -25,7 +27,8 @@ class table {
 private:
     class page;
 
-    kv_store m_kv_store;
+    mutable kv_store m_kv_store;
+
     const std::size_t m_page_cache_size;
     using list_type = std::list<std::tuple<id, page>>;
     mutable list_type m_lru_order;
@@ -51,7 +54,7 @@ private:
             return *this;
         }
 
-        void read(std::size_t addr, std::string_view& buffer) const {
+        void read(std::size_t addr, const utils::out_buffer& buffer) const {
             std::memcpy(buffer.data(), &m_data[addr], buffer.size());
         }
 
@@ -80,11 +83,11 @@ private:
     };
 
     std::size_t page_size() const {
-        return m_kv_store.metadata.page_size;
+        return m_kv_store.metadata().page_size;
     }
 
     std::size_t page_size() {
-        return const_cast<table*>(this)->page_size();
+        return const_cast<const table*>(this)->page_size();
     }
 
     /** Read a page by first looking in the cache, then falling back to
@@ -116,8 +119,8 @@ private:
 
         }
 
-        auto& [_, p] = m_lru_order.emplace_front(page_id,
-                                                 m_kv_store.read(page_id));
+        auto& p =
+            std::get<1>(m_lru_order.emplace_front(page_id, m_kv_store.read(page_id)));
         m_page_cache.emplace(page_id, m_lru_order.begin());
         return p;
     }
@@ -130,7 +133,7 @@ public:
         : m_kv_store(std::move(store)), m_page_cache_size(page_cache_size) {}
 
     table(table&& mvfrom) noexcept
-        : m_kv_store(std::move(m_kv_store)),
+        : m_kv_store(std::move(mvfrom.m_kv_store)),
           m_page_cache_size(mvfrom.m_page_cache_size),
           m_lru_order(std::move(mvfrom.m_lru_order)),
           m_page_cache(std::move(mvfrom.m_page_cache)) {}
@@ -161,7 +164,7 @@ public:
         @param addr The start address of the read.
         @param buffer The output buffer to fill.
      */
-    void read(std::size_t addr, std::string_view& buffer) const {
+    void read(std::size_t addr, const utils::out_buffer& buffer) const {
         std::size_t min_page = addr / page_size();
         std::size_t max_page = (addr + buffer.size()) / page_size();
 
@@ -169,6 +172,8 @@ public:
         std::size_t min_page_offset = addr - min_page_start;
         std::size_t read_size = std::min(page_size() - min_page_offset,
                                          buffer.size());
+
+
         read_page(min_page).read(min_page_offset, buffer.substr(0, read_size));
 
         if (min_page != max_page) {

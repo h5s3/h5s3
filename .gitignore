@@ -27,3 +27,11 @@ TAGS
 
 # Local makefile overrides.
 Makefile.local
+
+# file_driver example output
+ayy.lmao/*
+
+# manually add the source for examples you want to keep in source control
+examples/
+
+.gdb_history
