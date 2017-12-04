@@ -35,3 +35,5 @@ ayy.lmao/*
 examples/
 
 .gdb_history
+
+*.pyc

@@ -10,8 +10,7 @@
 
 #include "h5s3/private/page.h"
 #include "h5s3/private/out_buffer.h"
-
-#include <iostream>
+#include "h5s3/private/utils.h"
 
 namespace h5s3::driver {
 
@@ -48,7 +47,6 @@ struct inner_kv_store_params<F(const std::string_view&,
               page_cache_size(page_cache_size),
               extra(extra...) {}
     };
-
 };
 
 template<typename kv_store>
@@ -163,16 +161,23 @@ private:
             auto store = std::apply(kv_store::from_params,
                                        std::move(store_params));
 
-            std::size_t eof = store.metadata().eof;
+            metadata m(store.metadata());
 
-            page_table t(std::move(store),
-                         std::max(params->page_cache_size, 1ul));
+            std::size_t page_cache_size = params->page_cache_size;
+            if (page_cache_size == 0) {
+                using utils::operator""_GB;
+
+                page_cache_size = 4_GB / m.page_size;
+            }
+
+            std::size_t eof = m.eof;
+
+            page_table t(std::move(store), page_cache_size);
 
             kv_driver* f = new kv_driver(std::move(t), eof);
             return reinterpret_cast<H5FD_t*>(f);
         }
         catch (const std::exception& e) {
-            std::cout << e.what() << '\n';
             return nullptr;
         }
     }
