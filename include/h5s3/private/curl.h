@@ -25,6 +25,14 @@ public:
     explicit error(const std::string& message) : std::runtime_error(message) {}
 };
 
+class http_error : public error {
+public:
+    const int code;
+    explicit http_error(const std::string& message, int code)
+        : error(message), code(code) {}
+};
+
+
 class session {
 private:
     std::unique_ptr<CURL, curl_deleter> m_curl;

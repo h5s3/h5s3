@@ -32,9 +32,7 @@ struct inner_kv_store_params<F(const std::string_view&,
                                unsigned int,
                                std::size_t,
                                Args...)> {
-    static_assert(std::conjunction_v<
-                  std::is_pod_v<
-                  std::remove_cv_t<std::remove_reference_t<Args>>>...>,
+    static_assert((... && std::is_pod_v<std::remove_reference_t<Args>>),
                   "Only POD types may be used in kv_store::from_params");
 
     struct type {
@@ -245,7 +243,11 @@ private:
         @param file The file to get the eof on.
         @return The end of file address.
     */
+#if H5_VERSION_GE(1, 10, 0)
     static haddr_t get_eof(const H5FD_t *file, H5FD_mem_t) noexcept {
+#else
+    static haddr_t get_eof(const H5FD_t *file) noexcept {
+#endif
         const kv_driver& d = *reinterpret_cast<const kv_driver*>(file);
         return std::max(d.m_eoa, d.m_eof);
     }

@@ -51,7 +51,7 @@ notary::notary(const std::string& region,
 
 // http://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
 std::string notary::authorization_header(const HTTPVerb verb,
-                                         const std::string_view& canonical_uri,
+                                         const std::string_view& path,
                                          const std::vector<query_param>& query,
                                          const std::vector<header>& headers,
                                          const std::string_view& payload_hash) const {
@@ -61,7 +61,7 @@ std::string notary::authorization_header(const HTTPVerb verb,
     canonical_request_formatter << detail::canonicalize_verb(verb) << '\n';
 
     // URI
-    canonical_request_formatter << canonical_uri << '\n';
+    canonical_request_formatter << '/' << path << '\n';
 
     // Query Params
     for (const auto& [key, value] : query) {
@@ -113,9 +113,9 @@ std::string notary::authorization_header(const HTTPVerb verb,
     return out_formatter.str();
 }
 
-std::string get_bucket(const notary& signer,
-                       const std::string& bucket_name,
-                       const std::string& path) {
+std::string get_object(const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path) {
 
     std::stringstream host_formatter;
     host_formatter << bucket_name << ".s3.amazonaws.com";
@@ -138,16 +138,16 @@ std::string get_bucket(const notary& signer,
     headers.emplace_back("Authorization", auth);
 
     std::stringstream url_formatter;
-    url_formatter << "https://" << bucket_name << ".s3.amazonaws.com" << path;
+    url_formatter << "https://" << bucket_name << ".s3.amazonaws.com/" << path;
 
     curl::session session;
     return session.get(url_formatter.str(), headers);
 }
 
-std::string set_bucket(const notary& signer,
-                       const std::string& bucket_name,
-                       const std::string& path,
-                       const std::string& content) {
+std::string set_object(const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path,
+                       const std::string_view& content) {
 
     std::stringstream host_formatter;
     host_formatter << bucket_name << ".s3.amazonaws.com";
@@ -171,7 +171,7 @@ std::string set_bucket(const notary& signer,
     headers.emplace_back("Authorization", auth);
 
     std::stringstream url_formatter;
-    url_formatter << "https://" << bucket_name << ".s3.amazonaws.com" << path;
+    url_formatter << "https://" << bucket_name << ".s3.amazonaws.com/" << path;
 
     curl::session session;
     return session.put(url_formatter.str(), headers, content);

@@ -10,6 +10,9 @@ if 'upload' in sys.argv:
     with open('README.rst') as f:
         long_description = f.read()
 
+include_dirs = ['cxx/include']
+if os.environ.get('HDF5_INCLUDE_PATH'):
+    include_dirs.append(os.environ['HDF5_INCLUDE_PATH'])
 
 extension = Extension(
     'h5s3._h5s3',
@@ -18,10 +21,10 @@ extension = Extension(
         'curl',
         'crypto',
         'stdc++fs',
-        os.environ.get('HDF_LIBRARY', 'hdf5'),
+        os.environ.get('HDF5_LIBRARY', 'hdf5'),
     ],
     language='c++',
-    include_dirs=['cxx/include'],
+    include_dirs=include_dirs,
     extra_compile_args=[
         '-Wall',
         '-Wextra',

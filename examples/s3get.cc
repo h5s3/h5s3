@@ -9,7 +9,7 @@ int main(int, char**) {
                             "AKIAIOSFODNN7EXAMPLE",
                             "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
 
-    auto result = h5s3::s3::get_bucket(signer,
+    auto result = h5s3::s3::get_object(signer,
                                        "h5s3-development",
                                        "/test-uploads/example.txt");
     std::cout << result << std::endl;

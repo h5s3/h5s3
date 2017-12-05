@@ -25,11 +25,11 @@ inline sha256_hex to_hex(const sha256& hash){
     return result;
 }
 
-inline std::string_view as_string_view(sha256 hash){
+inline std::string_view as_string_view(const sha256& hash){
     return std::string_view(reinterpret_cast<const char *>(hash.data()), hash.size());
 }
 
-inline std::string_view as_string_view(sha256_hex hash){
+inline std::string_view as_string_view(const sha256_hex& hash){
     return std::string_view(reinterpret_cast<const char *>(hash.data()), hash.size());
 }
 
