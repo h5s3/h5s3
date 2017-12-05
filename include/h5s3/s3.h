@@ -3,13 +3,13 @@
 #include <string>
 #include <vector>
 
-#Include "h5s3/private/curl.h"
+#include "h5s3/private/curl.h"
 #include "h5s3/private/hash.h"
 
 namespace h5s3::s3 {
 
-typedef h5s3::curl::header header;
-typedef h5s3::curl::query_param query_param;
+using header = curl::header;
+using query_param = curl::query_param;
 
 enum class HTTPVerb {
     GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH,
@@ -39,12 +39,12 @@ public:
                                      const std::string_view& payload_hash) const;
 };
 
-std::string get_bucket(const notary& signer,
-                       const std::string& bucket_name,
-                       const std::string& path);
+std::string get_object(const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path);
 
-std::string set_bucket(const notary& signer,
-                       const std::string& bucket_name,
-                       const std::string& path,
-                       const std::string& content);
+std::string set_object(const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path,
+                       const std::string_view& content);
 }  // namespace h5s3::s3

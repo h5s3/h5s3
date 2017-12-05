@@ -3,7 +3,13 @@ import h5py
 from ._h5s3 import set_fapl as _set_fapl
 
 
-def set_fapl(plist, page_size=0, page_cache_size=0):
+def set_fapl(plist,
+             aws_access_key,
+             aws_secret_key,
+             aws_region="us-east-1",
+             page_size=0,
+             page_cache_size=0):
+
     """Set the fapl for the h5s3 driver.
 
     Parameters
@@ -21,10 +27,17 @@ def set_fapl(plist, page_size=0, page_cache_size=0):
     if page_cache_size < 0:
         raise ValueError('page_cache_size must be >= 0: %s' % page_cache_size)
 
-    _set_fapl(plist.id, page_size, page_cache_size)
+    _set_fapl(
+        plist.id,
+        page_size,
+        page_cache_size,
+        aws_access_key,
+        aws_secret_key,
+        aws_region,
+    )
 
 
-def regiser():
+def register():
     """Register the h5s3 driver with h5py.
     """
     h5py.register_driver('h5s3', set_fapl)

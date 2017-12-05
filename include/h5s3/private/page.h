@@ -147,6 +147,15 @@ public:
         return *this;
     }
 
+    ~table() {
+        try {
+            flush();
+        }
+        catch (...) {
+            // TODO: Do something here.
+        }
+    }
+
     /** Access the kv_store that backs this table.
      */
     kv_store& store() {
@@ -227,7 +236,7 @@ public:
      */
     void flush() {
         for (auto& [id, page] : m_lru_order) {
-            m_write_page(id, std::string_view(page.data(), page_size()));
+            m_kv_store.write(id, std::string_view(page.data(), page_size()));
             page.dirty(false);
         }
     }

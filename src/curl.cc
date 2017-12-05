@@ -66,7 +66,7 @@ void perform_request(CURL *curl,
     if (200 != response_code) {
         std::stringstream s;
         s << "Request was not a 200. Status was " << response_code << ".";
-        throw error(s.str());
+        throw http_error(s.str(), response_code);
     }
 }
 
