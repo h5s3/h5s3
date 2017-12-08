@@ -246,5 +246,14 @@ public:
     void flush() const {
         const_cast<table*>(this)->flush();
     }
+
+    /** Truncate the semantic address space.
+     */
+    void truncate() {
+        m_page_cache.clear();
+        m_lru_order.clear();
+
+        m_kv_store.truncate();
+    }
 };
 }  // namespace h5s3::page

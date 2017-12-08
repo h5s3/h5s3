@@ -48,8 +48,6 @@ public:
         return {path, page_size};
     }
 
-    ~file_kv_store();
-
     inline driver::metadata metadata() const {
         return m_metadata;
     }
@@ -60,6 +58,8 @@ public:
 
     std::unique_ptr<char[]> read(page::id page_id) const;
     void write(page::id page_id, const std::string_view& data);
+    void flush();
+    void truncate();
 };
 
 using file_driver = driver::kv_driver<file_kv_store>;

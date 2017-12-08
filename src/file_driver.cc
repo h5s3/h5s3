@@ -3,16 +3,6 @@
 namespace h5s3::file_driver {
 const char* file_kv_store::name = "file_kv_store";
 
-file_kv_store::~file_kv_store() {
-    try {
-        std::fstream metafile(fs::path(m_path) / ".meta",
-                              metafile.out | metafile.trunc);
-        metafile << m_metadata;
-    }
-    catch (...) {
-    }
-}
-
 std::unique_ptr<char[]> file_kv_store::read(page::id page_id) const {
     auto out = std::make_unique<char[]>(m_metadata.page_size);
 
@@ -37,6 +27,23 @@ void file_kv_store::write(page::id page_id, const std::string_view& data) {
     // keep track of the eof by noting the largest page we have ever seen
     std::size_t page_size = m_metadata.page_size;
     m_metadata.eof = std::max(m_metadata.eof, page_id * page_size + page_size);
+}
+
+void file_kv_store::flush() {
+    std::fstream metafile(fs::path(m_path) / ".meta",
+                          metafile.out | metafile.trunc);
+    metafile << m_metadata;
+}
+
+void file_kv_store::truncate() {
+    for (const fs::path& path : fs::directory_iterator(m_path)) {
+        if (path.filename() != ".meta") {
+            fs::remove(path);
+        }
+    }
+
+    m_metadata.eof = 0;
+    flush();
 }
 
 // declare storage for the static member m_class in this TU

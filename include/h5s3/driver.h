@@ -7,7 +7,9 @@
 #include "H5FDpublic.h"
 #include "H5Ppublic.h"
 #include "H5Ipublic.h"
+#include "H5Epublic.h"
 
+#include "h5s3/private/error.h"
 #include "h5s3/private/page.h"
 #include "h5s3/private/out_buffer.h"
 #include "h5s3/private/utils.h"
@@ -121,6 +123,7 @@ private:
         m_class.get_eof = get_eof;
         m_class.read = read;
         m_class.write = write;
+        m_class.flush = flush;
         m_class.truncate = truncate;
 
         H5FD_mem_t fl_map[] = H5FD_FLMAP_SINGLE;
@@ -143,10 +146,16 @@ private:
                         unsigned int flags,
                         hid_t fapl_id,
                         haddr_t) noexcept {
+        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
+
         const params_struct* params =
             reinterpret_cast<const params_struct*>(H5Pget_driver_info(fapl_id));
 
         if (nullptr == params) {
+            ctx.raise(__LINE__,
+                      H5E_PLIST,
+                      H5E_BADVALUE,
+                      "bad VFL driver info");
             return nullptr;
         }
 
@@ -176,6 +185,10 @@ private:
             return reinterpret_cast<H5FD_t*>(f);
         }
         catch (const std::exception& e) {
+            ctx.raise(__LINE__,
+                      H5E_FILE,
+                      H5E_CANTOPENFILE,
+                      e.what());
             return nullptr;
         }
     }
@@ -183,11 +196,6 @@ private:
     /** Close an hdf5 file that uses this driver.
 
         @param file The hdf5 file to close.
-
-        ## Notes
-
-        key-value stores should implement custom close logic in their
-        destructor.
      */
     static herr_t close(H5FD_t* file) noexcept {
         delete reinterpret_cast<kv_driver*>(file);
@@ -216,7 +224,7 @@ private:
         @param file The file to retrieve the eoa on.
         @return The end of allocated address.
      */
-    static haddr_t get_eoa(const H5FD_t *file, H5FD_mem_t) {
+    static haddr_t get_eoa(const H5FD_t* file, H5FD_mem_t) {
         return reinterpret_cast<const kv_driver*>(file)->m_eoa;
     }
 
@@ -228,7 +236,7 @@ private:
         @param addr The new end of allocated address.
         @return zero on success, non-zero on failure.
      */
-    static herr_t set_eoa(H5FD_t *file, H5FD_mem_t, haddr_t addr) noexcept {
+    static herr_t set_eoa(H5FD_t* file, H5FD_mem_t, haddr_t addr) noexcept {
         reinterpret_cast<kv_driver*>(file)->m_eoa = addr;
         kv_driver& d = *reinterpret_cast<kv_driver*>(file);
         d.m_eoa = addr;
@@ -244,9 +252,9 @@ private:
         @return The end of file address.
     */
 #if H5_VERSION_GE(1, 10, 0)
-    static haddr_t get_eof(const H5FD_t *file, H5FD_mem_t) noexcept {
+    static haddr_t get_eof(const H5FD_t* file, H5FD_mem_t) noexcept {
 #else
-    static haddr_t get_eof(const H5FD_t *file) noexcept {
+    static haddr_t get_eof(const H5FD_t* file) noexcept {
 #endif
         const kv_driver& d = *reinterpret_cast<const kv_driver*>(file);
         return std::max(d.m_eoa, d.m_eof);
@@ -260,19 +268,24 @@ private:
         @param buf The output buffer.
         @return zero on success, non-zero on failure.
      */
-    static herr_t read(H5FD_t *file,
+    static herr_t read(H5FD_t* file,
             H5FD_mem_t,
             hid_t,
             haddr_t addr,
             size_t size,
             void *buf) noexcept {
+        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
 
         const auto& table = reinterpret_cast<kv_driver*>(file)->m_page_table;
         utils::out_buffer out{reinterpret_cast<char*>(buf), size};
         try {
             table.read(addr, out);
         }
-        catch (const std::exception&) {
+        catch (const std::exception& e) {
+            ctx.raise(__LINE__,
+                      H5E_IO,
+                      H5E_READERROR,
+                      e.what());
             return -1;
         }
 
@@ -287,18 +300,46 @@ private:
         @param buf The buffer to copy from.
         @return zero on success, non-zero on failure.
     */
-    static herr_t write(H5FD_t *file,
+    static herr_t write(H5FD_t* file,
                         H5FD_mem_t,
                         hid_t,
                         haddr_t addr,
                         size_t size,
                         const void *buf) noexcept {
+        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
+
         auto& table = reinterpret_cast<kv_driver*>(file)->m_page_table;
         const std::string_view view(reinterpret_cast<const char*>(buf), size);
         try {
             table.write(addr, view);
         }
-        catch (const std::exception&) {
+        catch (const std::exception& e) {
+            ctx.raise(__LINE__,
+                      H5E_IO,
+                      H5E_READERROR,
+                      e.what());
+            return -1;
+        }
+
+        return 0;
+    }
+
+    /** Flush data to an hdf5 file.
+
+        @param file The file to flush.
+        @return zero on success, non-zero on failure.
+     */
+    static herr_t flush(H5FD_t* file, hid_t , bool) {
+        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
+
+        try {
+            reinterpret_cast<kv_driver*>(file)->m_page_table.flush();
+        }
+        catch (const std::exception& e) {
+            ctx.raise(__LINE__,
+                      H5E_IO,
+                      H5E_WRITEERROR,
+                      e.what());
             return -1;
         }
 
@@ -309,7 +350,20 @@ private:
 
         @return zero on success, non-zero on failure.
      */
-    static herr_t truncate(H5FD_t *, hid_t, hbool_t) noexcept {
+    static herr_t truncate(H5FD_t* file, hid_t, hbool_t) noexcept {
+        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
+
+        try {
+            reinterpret_cast<kv_driver*>(file)->m_page_table.truncate();
+        }
+        catch (const std::exception& e) {
+            ctx.raise(__LINE__,
+                      H5E_IO,
+                      H5E_SEEKERROR,
+                      e.what());
+            return -1;
+        }
+
         return 0;
     }
 
