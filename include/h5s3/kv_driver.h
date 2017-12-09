@@ -1,7 +1,6 @@
 #pragma once
 
 #include <limits>
-#include <sstream>
 #include <type_traits>
 
 #include "H5FDpublic.h"
@@ -15,16 +14,6 @@
 #include "h5s3/private/utils.h"
 
 namespace h5s3::driver {
-
-struct metadata {
-    std::size_t page_size;
-    std::size_t eof;
-};
-
-
-std::istream& operator>>(std::istream&, metadata&);
-std::ostream& operator<<(std::ostream&, metadata&);
-
 namespace detail {
 template<typename F>
 struct inner_kv_store_params;
@@ -97,12 +86,10 @@ private:
     H5FD_t m_public;
     page_table m_page_table;
     haddr_t m_eoa;
-    haddr_t m_eof;
 
-    kv_driver(page_table&& table, haddr_t eof)
+    kv_driver(page_table&& table)
         : m_page_table(std::move(table)),
-          m_eoa(eof),
-          m_eof(eof) {}
+          m_eoa(0) {}
 
     /** Initialize the driver's hdf5 class. This function is idempotent.
 
@@ -168,20 +155,14 @@ private:
             auto store = std::apply(kv_store::from_params,
                                        std::move(store_params));
 
-            metadata m(store.metadata());
-
             std::size_t page_cache_size = params->page_cache_size;
             if (page_cache_size == 0) {
                 using utils::operator""_GB;
 
-                page_cache_size = 4_GB / m.page_size;
+                page_cache_size = 4_GB / store.page_size();
             }
-
-            std::size_t eof = m.eof;
-
             page_table t(std::move(store), page_cache_size);
-
-            kv_driver* f = new kv_driver(std::move(t), eof);
+            kv_driver* f = new kv_driver(std::move(t));
             return reinterpret_cast<H5FD_t*>(f);
         }
         catch (const std::exception& e) {
@@ -238,11 +219,6 @@ private:
      */
     static herr_t set_eoa(H5FD_t* file, H5FD_mem_t, haddr_t addr) noexcept {
         reinterpret_cast<kv_driver*>(file)->m_eoa = addr;
-        kv_driver& d = *reinterpret_cast<kv_driver*>(file);
-        d.m_eoa = addr;
-        if (addr > d.m_eof) {
-            d.m_eof = addr;
-        }
         return 0;
     }
 
@@ -257,7 +233,7 @@ private:
     static haddr_t get_eof(const H5FD_t* file) noexcept {
 #endif
         const kv_driver& d = *reinterpret_cast<const kv_driver*>(file);
-        return std::max(d.m_eoa, d.m_eof);
+        return std::max(d.m_eoa, d.m_page_table.eof());
     }
 
     /** Read data out of an hdf5 file.
@@ -329,7 +305,11 @@ private:
         @param file The file to flush.
         @return zero on success, non-zero on failure.
      */
-    static herr_t flush(H5FD_t* file, hid_t , unsigned int) {
+#if H5_VERSION_GE(1, 10, 0)
+    static herr_t flush(H5FD_t* file, hid_t , hbool_t) noexcept{
+#else
+    static herr_t flush(H5FD_t* file, hid_t, unsigned int) noexcept {
+#endif
         error::context ctx(__FILE__, __PRETTY_FUNCTION__);
 
         try {
@@ -353,8 +333,9 @@ private:
     static herr_t truncate(H5FD_t* file, hid_t, hbool_t) noexcept {
         error::context ctx(__FILE__, __PRETTY_FUNCTION__);
 
+        kv_driver& d = *reinterpret_cast<kv_driver*>(file);
         try {
-            reinterpret_cast<kv_driver*>(file)->m_page_table.truncate();
+            d.m_page_table.truncate(d.m_eoa);
         }
         catch (const std::exception& e) {
             ctx.raise(__LINE__,

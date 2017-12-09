@@ -1,8 +1,8 @@
-#include "h5s3/driver.h"
-#include "h5s3/private/utils.h"
-#include "h5s3/s3.h"
+#include <unordered_set>
 
-#include <regex>
+#include "h5s3/kv_driver.h"
+#include "h5s3/private/page.h"
+#include "h5s3/s3.h"
 
 namespace h5s3::s3_driver {
 
@@ -11,7 +11,9 @@ private:
     const std::string m_bucket;
     const std::string m_path;
     s3::notary m_notary;
-    driver::metadata m_metadata;
+    page::id m_max_page;
+    std::size_t m_page_size;
+    std::unordered_set<page::id> m_invalid_pages;
 
     s3_kv_store(const std::string& bucket,
                 const std::string& path,
@@ -20,6 +22,10 @@ private:
                 const std::string& region,
                 const std::size_t page_size);
 
+    inline std::unique_ptr<char[]> new_page() const {
+        return std::make_unique<char[]>(m_page_size);
+    }
+
 public:
     static const char* name;
 
@@ -27,7 +33,8 @@ public:
         : m_bucket(std::move(mvfrom.m_bucket)),
           m_path(std::move(mvfrom.m_path)),
           m_notary(std::move(mvfrom.m_notary)),
-          m_metadata(std::move(mvfrom.m_metadata)) {}
+          m_max_page(mvfrom.m_max_page),
+          m_page_size(mvfrom.m_page_size) {}
 
     static s3_kv_store from_params(const std::string_view& uri_view,
                                    unsigned int,  // TODO: Use this?
@@ -36,18 +43,19 @@ public:
                                    const char* secret_key,
                                    const char* region);
 
-    inline driver::metadata metadata() const {
-        return m_metadata;
+    inline std::size_t page_size() const {
+        return m_page_size;
     }
 
-    inline driver::metadata metadata() {
-        return const_cast<const s3_kv_store*>(this)->metadata();
+    inline page::id max_page() const {
+        return m_max_page;
     }
+
+    void max_page(page::id max_page);
 
     std::unique_ptr<char[]> read(page::id page_id) const;
     void write(page::id page_id, const std::string_view& data);
     void flush();
-    void truncate();
 };
 
 using s3_driver = driver::kv_driver<s3_kv_store>;

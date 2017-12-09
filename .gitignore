@@ -37,3 +37,6 @@ examples/
 .gdb_history
 
 *.pyc
+
+# make helper
+.compiler_flags
