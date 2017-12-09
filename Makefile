@@ -16,7 +16,8 @@ else
 endif
 
 OPTLEVEL ?= 3
-CXXFLAGS := -std=gnu++17 -Wall -Wextra -O$(OPTLEVEL) -g
+# This uses = instead of := so that you we can conditionally change OPTLEVEL below.
+CXXFLAGS = -std=gnu++17 -Wall -Wextra -g -O$(OPTLEVEL)
 LDFLAGS := $(EXTRA_LDFLAGS) -lcurl -lcrypto -lstdc++fs -l$(HDF5_LIBRARY)
 INCLUDE_DIRS := include/ $(HDF5_INCLUDE_PATH)
 INCLUDE := $(foreach d,$(INCLUDE_DIRS), -I$d)
@@ -34,7 +35,8 @@ endif
 
 ASAN_OPTIONS := symbolize=1
 ASAN_SYMBOLIZER_PATH ?= llvm-symbolizer
-ifneq ($(ADDRESS_SANITIZE),)
+ifeq ($(ADDRESS_SANITIZE), 1)
+	OPTLEVEL := 0
 	CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer -static-libasan
 	LDFLAGS += -fsanitize=address -static-libasan
 endif
@@ -72,13 +74,18 @@ local-install: $(SONAME)
 	ln -s ~/lib/$(SONAME) ~/lib/$(SHORT_SONAME)
 	cp -rf include/$(LIBRARY) ~/include
 
+# Write our current compiler flags so that we rebuild if they change.
+force:
+.compiler_flags: force
+	echo '$(CXXFLAGS)' | cmp -s - $@ || echo '$(CXXFLAGS)' > $@
+
 $(SONAME): $(OBJECTS) $(HEADERS)
 	$(CXX) $(OBJECTS) -shared -Wl,-$(SONAME_FLAG),$(SONAME) \
 		-o $(SONAME) $(LDFLAGS)
 	@rm -f $(SHORT_SONAME)
 	ln -s $(SONAME) $(SHORT_SONAME)
 
-src/%.o: src/%.cc
+src/%.o: src/%.cc .compiler_flags
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MD -fPIC -c $< -o $@
 
 examples/%.o: examples/%.cc
@@ -109,12 +116,14 @@ gtest.o: $(GTEST_SRCS)
 gtest.a: gtest.o
 	$(AR) $(ARFLAGS) $@ $^
 
-.PHONY: python
-python:
+python: .compiler_flags
 	cd bindings/python && \
 	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
 	HDF5_LIBRARY=$(HDF5_LIBRARY) \
 	CC=$(CC) \
+	CFLAGS='$(CFLAGS)' \
+	CXXFLAGS='$(CXXFLAGS)' \
+	LDFLAGS='$(LDFLAGS)' \
 	python setup.py build_ext --inplace
 
 .PHONY: clean
