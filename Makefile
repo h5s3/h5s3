@@ -32,6 +32,13 @@ else
 	SONAME_FLAG := soname
 endif
 
+ASAN_OPTIONS := symbolize=1
+ASAN_SYMBOLIZER_PATH ?= llvm-symbolizer
+ifneq ($(ADDRESS_SANITIZE),)
+	CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer -static-libasan
+	LDFLAGS += -fsanitize=address -static-libasan
+endif
+
 SOURCES := $(wildcard src/*.cc)
 OBJECTS := $(SOURCES:.cc=.o)
 DFILES :=  $(SOURCES:.cc=.d)
@@ -102,6 +109,13 @@ gtest.o: $(GTEST_SRCS)
 gtest.a: gtest.o
 	$(AR) $(ARFLAGS) $@ $^
 
+.PHONY: python
+python:
+	cd bindings/python && \
+	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
+	HDF5_LIBRARY=$(HDF5_LIBRARY) \
+	CC=$(CC) \
+	python setup.py build_ext --inplace
 
 .PHONY: clean
 clean:

@@ -329,7 +329,7 @@ private:
         @param file The file to flush.
         @return zero on success, non-zero on failure.
      */
-    static herr_t flush(H5FD_t* file, hid_t , bool) {
+    static herr_t flush(H5FD_t* file, hid_t , unsigned int) {
         error::context ctx(__FILE__, __PRETTY_FUNCTION__);
 
         try {

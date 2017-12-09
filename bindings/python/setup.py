@@ -25,6 +25,7 @@ extension = Extension(
     ],
     language='c++',
     include_dirs=include_dirs,
+    depends=glob.glob('cxx/include/h5s3/**/*.h', recursive=True),
     extra_compile_args=[
         '-Wall',
         '-Wextra',
