@@ -236,9 +236,12 @@ public:
      */
     void flush() {
         for (auto& [id, page] : m_lru_order) {
-            m_kv_store.write(id, std::string_view(page.data(), page_size()));
-            page.dirty(false);
+            if (page.dirty()) {
+                m_kv_store.write(id, std::string_view(page.data(), page_size()));
+                page.dirty(false);
+            }
         }
+        m_kv_store.flush();
     }
 
     /** Flush the internal caches back to `store()`.
@@ -252,7 +255,6 @@ public:
     void truncate() {
         m_page_cache.clear();
         m_lru_order.clear();
-
         m_kv_store.truncate();
     }
 };
