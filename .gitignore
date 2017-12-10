@@ -9,6 +9,7 @@ tests/run
 
 # doc artifacts
 html/*
+doxygen-build/*
 
 # scratch file for testing linking
 scratch.cc

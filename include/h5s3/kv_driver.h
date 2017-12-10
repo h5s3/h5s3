@@ -47,29 +47,6 @@ using kv_store_params = typename inner_kv_store_params<decltype(kv_store::from_p
     This driver is polymorphic over the backing key-value store.
 
     @tparam kv_store The type of the backing key-value store.
-
-    ## Notes
-    `kv_store` must implement the following methods:
-
-    ```
-    // construct a kv_store from the params passed to H5create
-    static kv_store from_params(const std::string_view& path,
-                                unsigned int flags,
-                                std::size_t page_size,
-                                Args...);
-
-    // read the metadata from the store if the file already exists
-    metadata metadata();
-
-    // write the metadata to the store
-    void metadata(const metadata&);
-
-    // read the contents of a page; this should allocate a new page
-    // of zeroed data if needed
-    std::unique_ptr<char[]> read(page::id page_id);
-
-    // write the buffer to a page
-    void write(page::id, const std::string_view& data);
  */
 template<typename kv_store>
 struct kv_driver {
@@ -133,13 +110,13 @@ private:
                         unsigned int flags,
                         hid_t fapl_id,
                         haddr_t) noexcept {
-        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
-
         const params_struct* params =
             reinterpret_cast<const params_struct*>(H5Pget_driver_info(fapl_id));
 
         if (nullptr == params) {
-            ctx.raise(__LINE__,
+            error::raise(__FILE__,
+                      __PRETTY_FUNCTION__,
+                      __LINE__,
                       H5E_PLIST,
                       H5E_BADVALUE,
                       "bad VFL driver info");
@@ -166,10 +143,12 @@ private:
             return reinterpret_cast<H5FD_t*>(f);
         }
         catch (const std::exception& e) {
-            ctx.raise(__LINE__,
-                      H5E_FILE,
-                      H5E_CANTOPENFILE,
-                      e.what());
+            error::raise(__FILE__,
+                         __PRETTY_FUNCTION__,
+                         __LINE__,
+                         H5E_FILE,
+                         H5E_CANTOPENFILE,
+                         e.what());
             return nullptr;
         }
     }
@@ -250,18 +229,18 @@ private:
             haddr_t addr,
             size_t size,
             void *buf) noexcept {
-        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
-
         const auto& table = reinterpret_cast<kv_driver*>(file)->m_page_table;
         utils::out_buffer out{reinterpret_cast<char*>(buf), size};
         try {
             table.read(addr, out);
         }
         catch (const std::exception& e) {
-            ctx.raise(__LINE__,
-                      H5E_IO,
-                      H5E_READERROR,
-                      e.what());
+            error::raise(__FILE__,
+                         __PRETTY_FUNCTION__,
+                         __LINE__,
+                         H5E_IO,
+                         H5E_READERROR,
+                         e.what());
             return -1;
         }
 
@@ -282,18 +261,18 @@ private:
                         haddr_t addr,
                         size_t size,
                         const void *buf) noexcept {
-        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
-
         auto& table = reinterpret_cast<kv_driver*>(file)->m_page_table;
         const std::string_view view(reinterpret_cast<const char*>(buf), size);
         try {
             table.write(addr, view);
         }
         catch (const std::exception& e) {
-            ctx.raise(__LINE__,
-                      H5E_IO,
-                      H5E_READERROR,
-                      e.what());
+            error::raise(__FILE__,
+                         __PRETTY_FUNCTION__,
+                         __LINE__,
+                         H5E_IO,
+                         H5E_READERROR,
+                         e.what());
             return -1;
         }
 
@@ -310,16 +289,16 @@ private:
 #else
     static herr_t flush(H5FD_t* file, hid_t, unsigned int) noexcept {
 #endif
-        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
-
         try {
             reinterpret_cast<kv_driver*>(file)->m_page_table.flush();
         }
         catch (const std::exception& e) {
-            ctx.raise(__LINE__,
-                      H5E_IO,
-                      H5E_WRITEERROR,
-                      e.what());
+            error::raise(__FILE__,
+                         __PRETTY_FUNCTION__,
+                         __LINE__,
+                         H5E_IO,
+                         H5E_WRITEERROR,
+                         e.what());
             return -1;
         }
 
@@ -331,17 +310,17 @@ private:
         @return zero on success, non-zero on failure.
      */
     static herr_t truncate(H5FD_t* file, hid_t, hbool_t) noexcept {
-        error::context ctx(__FILE__, __PRETTY_FUNCTION__);
-
         kv_driver& d = *reinterpret_cast<kv_driver*>(file);
         try {
             d.m_page_table.truncate(d.m_eoa);
         }
         catch (const std::exception& e) {
-            ctx.raise(__LINE__,
-                      H5E_IO,
-                      H5E_SEEKERROR,
-                      e.what());
+            error::raise(__FILE__,
+                         __PRETTY_FUNCTION__,
+                         __LINE__,
+                         H5E_IO,
+                         H5E_SEEKERROR,
+                         e.what());
             return -1;
         }
 
