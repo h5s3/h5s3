@@ -40,3 +40,5 @@ examples/
 
 # make helper
 .compiler_flags
+
+bindings/python/h5s3.egg-info/*

@@ -5,6 +5,7 @@
 
 #include "h5s3/private/curl.h"
 #include "h5s3/private/hash.h"
+#include "h5s3/private/out_buffer.h"
 
 namespace h5s3::s3 {
 
@@ -33,18 +34,32 @@ public:
 
     // http://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
     std::string authorization_header(const HTTPVerb verb,
-                                     const std::string_view& canonical_uri,
+                                     const std::string_view& bucket_name,
+                                     const std::string_view& path,
                                      const std::vector<query_param>& query,
                                      const std::vector<header>& headers,
                                      const std::string_view& payload_hash) const;
 };
 
+extern const std::string_view default_host;
+
 std::string get_object(const notary& signer,
                        const std::string_view& bucket_name,
-                       const std::string_view& path);
+                       const std::string_view& path,
+                       const std::string_view& host = default_host,
+                       bool use_tls = true);
+
+std::size_t get_object(utils::out_buffer& out,
+                       const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path,
+                       const std::string_view& = default_host,
+                       bool use_tls = true);
 
 std::string set_object(const notary& signer,
                        const std::string_view& bucket_name,
                        const std::string_view& path,
-                       const std::string_view& content);
+                       const std::string_view& content,
+                       const std::string_view& host = default_host,
+                       bool use_tls = true);
 }  // namespace h5s3::s3

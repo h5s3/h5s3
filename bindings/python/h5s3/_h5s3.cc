@@ -7,12 +7,14 @@ PyObject* set_fapl(PyObject*, PyObject* args) {
     PyObject* id_ob;
     PyObject* page_size_ob;
     PyObject* page_cache_size_ob;
-    char* access_key;
-    char* secret_key;
-    char* region;
+    const char* access_key;
+    const char* secret_key;
+    const char* region;
+    const char* host;
+    int use_tls;
 
     if (!PyArg_ParseTuple(args,
-                          "O!O!O!sss:set_fapl",
+                          "O!O!O!ssssp:set_fapl",
                           &PyLong_Type,
                           &id_ob,
                           &PyLong_Type,
@@ -21,7 +23,9 @@ PyObject* set_fapl(PyObject*, PyObject* args) {
                           &page_cache_size_ob,
                           &access_key,
                           &secret_key,
-                          &region)) {
+                          &region,
+                          &host,
+                          &use_tls)) {
         return nullptr;
     }
 
@@ -41,7 +45,14 @@ PyObject* set_fapl(PyObject*, PyObject* args) {
     }
 
     using driver = h5s3::s3_driver::s3_driver;
-    if (driver::set_fapl(id, page_size, page_cache_size, access_key, secret_key, region)) {
+    if (driver::set_fapl(id,
+                         page_size,
+                         page_cache_size,
+                         access_key,
+                         secret_key,
+                         region,
+                         host,
+                         use_tls)) {
         PyErr_SetString(PyExc_ValueError, "failed to set the driver");
         return nullptr;
     }

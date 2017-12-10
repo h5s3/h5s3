@@ -7,6 +7,8 @@
 
 #include "curl/curl.h"
 
+#include "h5s3/private/out_buffer.h"
+
 namespace h5s3::curl {
 
 typedef std::pair<std::string_view, std::string_view> header;
@@ -43,8 +45,25 @@ public:
             throw error("Failed to initialize curl request.");
         }
     }
+    /** Perform an HTTP GET request, returning the response as a `std::string`.
+
+        @param url The url to GET.
+        @param headers The headers to set in the request.
+        @return The response body.
+     */
     std::string get(const std::string_view& url,
                     const std::vector<header>& headers) const;
+
+    /** Perform and HTTP GET request, writing the response into an out_buffer.
+
+        @param url The url to GET.
+        @param headers The headers to set in the request.
+        @param out The output buffer to write to.
+        @return The number of bytes written to `out`.
+     */
+    std::size_t get(const std::string_view& url,
+                    const std::vector<header>& headers,
+                    utils::out_buffer& out) const;
 
     std::string put(const std::string_view& url,
                     const std::vector<header>& headers,

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <regex>
 
 #include "h5s3/private/s3_driver.h"
@@ -5,13 +6,17 @@
 namespace h5s3::s3_driver {
 const char* s3_kv_store::name = "h5s3";
 
-s3_kv_store::s3_kv_store(const std::string& bucket,
+s3_kv_store::s3_kv_store(const std::string& host,
+                         bool use_tls,
+                         const std::string& bucket,
                          const std::string& path,
                          const std::string& access_key,
                          const std::string& secret_key,
                          const std::string& region,
                          const std::size_t page_size)
-    : m_bucket(bucket),
+    : m_host(host),
+      m_use_tls(use_tls),
+      m_bucket(bucket),
       m_path(path),
       m_notary(region, access_key, secret_key),
       m_max_page(0),
@@ -19,8 +24,10 @@ s3_kv_store::s3_kv_store(const std::string& bucket,
 
     try {
         std::string result = s3::get_object(m_notary,
-                                            bucket,
-                                            path + "/.meta");
+                                            m_bucket,
+                                            path + "/.meta",
+                                            m_host,
+                                            m_use_tls);
 
         std::regex metadata_regex("page_size=([0-9]+)\n"
                                   "max_page=([0-9]+)\n"
@@ -73,7 +80,9 @@ s3_kv_store s3_kv_store::from_params(const std::string_view& uri_view,
                                      std::size_t page_size,
                                      const char* access_key,
                                      const char* secret_key,
-                                     const char* region) {
+                                     const char* region,
+                                     const char* host,
+                                     bool use_tls) {
     std::string uri(uri_view);
     std::regex url_regex("s3://(.+)/(.+)");
     std::smatch match;
@@ -107,7 +116,20 @@ s3_kv_store s3_kv_store::from_params(const std::string_view& uri_view,
         page_size = 2_MB;
     }
 
-    return {bucket, path, access_key, secret_key, region, page_size};
+    std::string host_string;
+    if (!host) {
+        host_string = s3::default_host;
+    }
+    else {
+        host_string = host;
+    }
+    return {host,
+            use_tls,
+            bucket,
+            path,
+            access_key,
+            secret_key,
+            region,page_size};
 }
 
 void s3_kv_store::max_page(page::id max_page) {
@@ -122,27 +144,33 @@ void s3_kv_store::max_page(page::id max_page) {
     m_max_page = max_page;
 }
 
-std::unique_ptr<char[]> s3_kv_store::read(page::id page_id) const {
+void s3_kv_store::read(page::id page_id, utils::out_buffer& out) const {
+    assert(out.size() == m_page_size);
+
     if (page_id > m_max_page ||
         m_invalid_pages.find(page_id) != m_invalid_pages.end()) {
-        return new_page();
+        std::memset(out.data(), 0, m_page_size);
     }
 
     std::string keyname(m_path + "/" + std::to_string(page_id));
     try {
-        std::string result = s3::get_object(m_notary,
-                                            m_bucket,
-                                            keyname);
-        auto out = std::make_unique<char[]>(result.size());
-        result.copy(out.get(), result.size());
-        return out;
+        std::size_t size = s3::get_object(out,
+                                          m_notary,
+                                          m_bucket,
+                                          keyname,
+                                          m_host,
+                                          m_use_tls);
+        if (size != m_page_size) {
+            throw std::runtime_error("page was smaller than the page_size");
+        }
     }
     catch(const curl::http_error& e) {
         if (e.code != 404) {
             throw;
         }
     }
-    return new_page();
+
+    std::memset(out.data(), 0, m_page_size);
 }
 
 void s3_kv_store::write(page::id page_id, const std::string_view& data) {
@@ -150,7 +178,9 @@ void s3_kv_store::write(page::id page_id, const std::string_view& data) {
     s3::set_object(m_notary,
                    m_bucket,
                    keyname,
-                   data);
+                   data,
+                   m_host,
+                   m_use_tls);
     m_max_page = std::max(m_max_page, page_id);
     m_invalid_pages.erase(page_id);
 }
@@ -167,7 +197,12 @@ void s3_kv_store::flush() {
         // consume the trailing comma
         formatter.get();
     }
-    s3::set_object(m_notary, m_bucket, m_path + "/.meta", formatter.str());
+    s3::set_object(m_notary,
+                   m_bucket,
+                   m_path + "/.meta",
+                   formatter.str(),
+                   m_host,
+                   m_use_tls);
 }
 
 // declare storage for the static member m_class in this TU

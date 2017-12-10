@@ -27,7 +27,7 @@ constexpr inline auto to_underlying(E e) {
 const inline std::string& canonicalize_verb(const HTTPVerb verb){
     return HTTP_VERB_NAMES[to_underlying(verb)];
 }
-} // namespace detail
+}  // namespace detail
 
 hash::sha256 calculate_signing_key(const std::string_view& now,
                                    const std::string_view& region,
@@ -51,6 +51,7 @@ notary::notary(const std::string& region,
 
 // http://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
 std::string notary::authorization_header(const HTTPVerb verb,
+                                         const std::string_view& bucket_name,
                                          const std::string_view& path,
                                          const std::vector<query_param>& query,
                                          const std::vector<header>& headers,
@@ -61,7 +62,7 @@ std::string notary::authorization_header(const HTTPVerb verb,
     canonical_request_formatter << detail::canonicalize_verb(verb) << '\n';
 
     // URI
-    canonical_request_formatter << '/' << path << '\n';
+    canonical_request_formatter << '/' << bucket_name << '/' << path << '\n';
 
     // Query Params
     for (const auto& [key, value] : query) {
@@ -113,24 +114,23 @@ std::string notary::authorization_header(const HTTPVerb verb,
     return out_formatter.str();
 }
 
-std::string get_object(const notary& signer,
-                       const std::string_view& bucket_name,
-                       const std::string_view& path) {
-
-    std::stringstream host_formatter;
-    host_formatter << bucket_name << ".s3.amazonaws.com";
-    std::string hostname = host_formatter.str();
-
+namespace {
+std::tuple<std::string, std::vector<header>> inner_get(const notary& signer,
+                                                       const std::string_view& bucket_name,
+                                                       const std::string_view& path,
+                                                       const std::string_view& host,
+                                                       bool use_tls) {
     hash::sha256_hex payload_hash = hash::sha256_hexdigest("");
 
     std::vector<query_param> query = {};
     std::vector<header> headers = {
-        {"host", hostname},
+        {"host", host},
         {"x-amz-content-sha256", hash::as_string_view(payload_hash)},
         {"x-amz-date", signer.signing_time()},
     };
 
     std::string auth = signer.authorization_header(HTTPVerb::GET,
+                                                   bucket_name,
                                                    path,
                                                    query,
                                                    headers,
@@ -138,32 +138,61 @@ std::string get_object(const notary& signer,
     headers.emplace_back("Authorization", auth);
 
     std::stringstream url_formatter;
-    url_formatter << "https://" << bucket_name << ".s3.amazonaws.com/" << path;
+    url_formatter << "http";
+    if (use_tls) {
+        url_formatter << 's';
+    }
+    url_formatter << "://" << host << '/' << bucket_name << '/' << path;
+
+    return {url_formatter.str(), headers};
+}
+}  // namespace
+
+const std::string_view default_host{"s3.amazonaws.com"};
+
+std::string get_object(const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path,
+                       const std::string_view& host,
+                       bool use_tls) {
+    auto [url, headers] = inner_get(signer, bucket_name, path, host, use_tls);
 
     curl::session session;
-    return session.get(url_formatter.str(), headers);
+    return session.get(url, headers);
+}
+
+
+std::size_t get_object(utils::out_buffer& out,
+                       const notary& signer,
+                       const std::string_view& bucket_name,
+                       const std::string_view& path,
+                       const std::string_view& host,
+                       bool use_tls) {
+    auto [url, headers] = inner_get(signer, bucket_name, path, host, use_tls);
+
+    curl::session session;
+    return session.get(url, headers, out);
 }
 
 std::string set_object(const notary& signer,
                        const std::string_view& bucket_name,
                        const std::string_view& path,
-                       const std::string_view& content) {
-
-    std::stringstream host_formatter;
-    host_formatter << bucket_name << ".s3.amazonaws.com";
-    std::string hostname = host_formatter.str();
+                       const std::string_view& content,
+                       const std::string_view& host,
+                       bool use_tls) {
 
     hash::sha256_hex payload_hash = hash::sha256_hexdigest(content);
     const std::string& signing_time = signer.signing_time();
 
     std::vector<query_param> query = {};
     std::vector<header> headers = {
-        {"host", hostname},
+        {"host", host},
         {"x-amz-content-sha256", hash::as_string_view(payload_hash)},
         {"x-amz-date", signing_time}
     };
 
     std::string auth = signer.authorization_header(HTTPVerb::PUT,
+                                                   bucket_name,
                                                    path,
                                                    query,
                                                    headers,
@@ -171,7 +200,11 @@ std::string set_object(const notary& signer,
     headers.emplace_back("Authorization", auth);
 
     std::stringstream url_formatter;
-    url_formatter << "https://" << bucket_name << ".s3.amazonaws.com/" << path;
+    url_formatter << "http";
+    if (use_tls) {
+        url_formatter << 's';
+    }
+    url_formatter << "://" << host << '/' << bucket_name << '/' << path;
 
     curl::session session;
     return session.put(url_formatter.str(), headers, content);

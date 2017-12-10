@@ -131,7 +131,8 @@ clean:
 	@rm -f $(SONAME) $(SHORT_SONAME) $(OBJECTS) $(DFILES) \
 		$(EXAMPLES) $(EXAMPLE_OBJECTS) $(EXAMPLE_DFILES) \
 		$(TESTRUNNER) $(TEST_OBJECTS) $(TEST_DFILES) \
-		gtest.o gtest.a
+		gtest.o gtest.a \
+		-r bindings/python/build
 
 -include $(DFILES) $(TEST_DFILES)
 

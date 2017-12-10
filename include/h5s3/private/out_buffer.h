@@ -10,7 +10,7 @@ namespace h5s3::utils {
 class out_buffer {
 private:
     char* m_data;
-    const std::size_t m_size;
+    std::size_t m_size;
 
 public:
     inline out_buffer(char* data, std::size_t size)
@@ -22,6 +22,15 @@ public:
 
     inline std::size_t size() {
         return m_size;
+    }
+
+    inline void remove_prefix(std::size_t to_remove) {
+        if (to_remove > m_size) {
+            throw std::out_of_range("to_remove > size()");
+        }
+
+        m_data += to_remove;
+        m_size -= to_remove;
     }
 
     /** Slice the output buffer.

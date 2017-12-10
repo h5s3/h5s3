@@ -41,10 +41,10 @@ private:
         std::unique_ptr<char[]> m_data;
 
     public:
-        page(std::unique_ptr<char[]>&& data)
+        page(std::size_t page_size)
             : m_dirty(false),
               m_zero_on_use(false),
-              m_data(std::move(data)) {}
+              m_data(std::make_unique<char[]>(page_size)) {}
 
         page(page&& mvfrom) noexcept
             : m_dirty(mvfrom.m_dirty),
@@ -54,6 +54,11 @@ private:
             m_dirty = mvfrom.m_dirty;
             m_data = std::move(mvfrom.m_data);
             return *this;
+        }
+
+        void reset() {
+            m_zero_on_use = false;
+            m_dirty = false;
         }
 
         void invalidate() {
@@ -92,8 +97,8 @@ private:
             return m_data.get();
         }
 
-        bool dirty() {
-            return m_dirty;
+        char* data() {
+            return m_data.get();
         }
 
         void dirty(bool dirty) {
@@ -128,18 +133,40 @@ private:
         }
 
         if (m_page_cache.size() == m_page_cache_size) {
+            // The cache is full, we are going to steal the buffer used for
+            // the least recently used page.
             const auto& [to_evict, page] = m_lru_order.back();
             if (page.dirty()) {
                 m_kv_store.write(to_evict,
                                  std::string_view(page.data(), page_size()));
             }
+            // remove the page from the cache mapping
             m_page_cache.erase(to_evict);
-            m_lru_order.pop_back();
 
+            // reset the page and change the node's id to the new page id
+            auto& [id, p] = m_lru_order.back();
+            id = page_id;
+            p.reset();
+        }
+        else {
+            // The cache is not yet full. Allocate a new page at the end of
+            // the lru list. We allocate this at the end because the read may
+            // fail and we want to reuse the page as early as possible.
+            m_lru_order.emplace_back(page_id, page_size());
         }
 
-        auto& p =
-            std::get<1>(m_lru_order.emplace_front(page_id, m_kv_store.read(page_id)));
+        // Fill the page from the kv_store. Note: `m_kv_store.read` MAY throw
+        // an exception and fail. If that happens, we do not want to move the
+        // page node to the front of the lru order or add the entry to the
+        // cache.
+        page& p = std::get<1>(m_lru_order.back());
+        utils::out_buffer b{p.data(), page_size()};
+        m_kv_store.read(page_id, b);
+
+        m_lru_order.splice(m_lru_order.begin(),
+                           m_lru_order,
+                           std::prev(m_lru_order.end()),
+                           m_lru_order.end());
         m_page_cache.emplace(page_id, m_lru_order.begin());
         return p;
     }
