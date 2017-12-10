@@ -9,6 +9,8 @@ HDF5_INCLUDE_PATH ?=
 HDF5_LIBRARY_PATH ?=
 HDF5_LIBRARY ?= hdf5
 
+GTEST_BREAK ?= 1
+
 ifneq ($(HDF5_LIBRARY_PATH),)
 	EXTRA_LDFLAGS := -L$(HDF5_LIBRARY_PATH)
 else
@@ -77,7 +79,7 @@ local-install: $(SONAME)
 # Write our current compiler flags so that we rebuild if they change.
 force:
 .compiler_flags: force
-	echo '$(CXXFLAGS)' | cmp -s - $@ || echo '$(CXXFLAGS)' > $@
+	@echo '$(CXXFLAGS)' | cmp -s - $@ || echo '$(CXXFLAGS)' > $@
 
 $(SONAME): $(OBJECTS) $(HEADERS)
 	$(CXX) $(OBJECTS) -shared -Wl,-$(SONAME_FLAG),$(SONAME) \
@@ -101,6 +103,10 @@ example-%: examples/%
 .PHONY: test
 test: $(TESTRUNNER)
 	@LD_LIBRARY_PATH=. $<
+
+.PHONY: gdbtest
+gdbtest: $(TESTRUNNER)
+	@LD_LIBRARY_PATH=. GTEST_BREAK_ON_FAILURE=$(GTEST_BREAK) gdb -ex run $<
 
 tests/%.o: tests/%.cc
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@
