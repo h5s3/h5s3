@@ -1,12 +1,10 @@
-``h5s3``
-========
-
-A driver for hdf5 which transparently stores data in Amazon S3.
+.. include:: ../../README.rst
 
 
 .. toctree::
    :maxdepth: 2
 
+   warnings
    python
    performance-tuning
    architecture
