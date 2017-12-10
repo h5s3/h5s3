@@ -13,9 +13,13 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+.PHONY: build-ext
+build-ext:
+	@cd ../bindings/python && python setup.py build_ext --inplace
+
 .PHONY: doxygen
-doxygen:
-	doxygen
+doxygen: build-ext
+	@doxygen
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
