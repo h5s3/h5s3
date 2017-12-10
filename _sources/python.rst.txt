@@ -6,6 +6,10 @@ Python (``h5py``)
 to pass S3 backed files to existing code programmed against the ``h5py``
 interface.
 
+Currently this requires installing h5py from github because the `driver
+registration feature <https://github.com/h5py/h5py/pull/956>`_ has not been put
+in a release yet.
+
 Example
 =======
 

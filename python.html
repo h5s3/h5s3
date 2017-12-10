@@ -168,6 +168,9 @@
 <p><code class="docutils literal"><span class="pre">h5s3</span></code> may be used from Python with <code class="docutils literal"><span class="pre">h5py</span></code>. By using <code class="docutils literal"><span class="pre">h5py</span></code>, you are able
 to pass S3 backed files to existing code programmed against the <code class="docutils literal"><span class="pre">h5py</span></code>
 interface.</p>
+<p>Currently this requires installing h5py from github because the <a class="reference external" href="https://github.com/h5py/h5py/pull/956">driver
+registration feature</a> has not been put
+in a release yet.</p>
 <div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5s3</span>
