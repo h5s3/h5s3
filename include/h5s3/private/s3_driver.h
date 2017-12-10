@@ -7,6 +7,8 @@
 
 namespace h5s3::s3_driver {
 
+/** The kv-store implementation backed by Amazon S3.
+ */
 class s3_kv_store {
 private:
     const std::string m_host;

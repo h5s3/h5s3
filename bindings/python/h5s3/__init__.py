@@ -30,6 +30,11 @@ def set_fapl(plist,
         The host for the aws API to ues.
     use_tls : bool, optional
         Connect to the aws API with TLS.
+
+    Notes
+    -----
+    All arguments except for ``plist`` will be forwarded from
+    :class:`h5py.File`.
     """
     if page_size < 0:
         raise ValueError('page_size must be >= 0: %s' % page_size)
@@ -51,11 +56,19 @@ def set_fapl(plist,
 
 def register():
     """Register the h5s3 driver with h5py.
+
+    See Also
+    --------
+    :func:`h5s3.unregiser`
     """
     h5py.register_driver('h5s3', set_fapl)
 
 
 def unregiser():
     """Unregister the h5s3 driver with h5py.
+
+    See Also
+    --------
+    :func:`h5s3.regiser`
     """
     h5py.unregister_driver('h5s3')
