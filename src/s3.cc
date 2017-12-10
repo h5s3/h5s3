@@ -115,11 +115,13 @@ std::string notary::authorization_header(const HTTPVerb verb,
 }
 
 namespace {
-std::tuple<std::string, std::vector<header>> inner_get(const notary& signer,
-                                                       const std::string_view& bucket_name,
-                                                       const std::string_view& path,
-                                                       const std::string_view& host,
-                                                       bool use_tls) {
+template<typename F>
+auto inner_get(const notary& signer,
+               const std::string_view& bucket_name,
+               const std::string_view& path,
+               const std::string_view& host,
+               bool use_tls,
+               F&& get) {
     hash::sha256_hex payload_hash = hash::sha256_hexdigest("");
 
     std::vector<query_param> query = {};
@@ -144,7 +146,7 @@ std::tuple<std::string, std::vector<header>> inner_get(const notary& signer,
     }
     url_formatter << "://" << host << '/' << bucket_name << '/' << path;
 
-    return {url_formatter.str(), headers};
+    return get(url_formatter.str(), headers);
 }
 }  // namespace
 
@@ -155,11 +157,12 @@ std::string get_object(const notary& signer,
                        const std::string_view& path,
                        const std::string_view& host,
                        bool use_tls) {
-    auto [url, headers] = inner_get(signer, bucket_name, path, host, use_tls);
+    auto get = [](const auto& url, const auto& headers) {
+        curl::session session;
+        return session.get(url, headers);
+    };
 
-    curl::session session;
-    return session.get(url, headers);
-}
+    return inner_get(signer,bucket_name, path, host, use_tls, get);}
 
 
 std::size_t get_object(utils::out_buffer& out,
@@ -168,10 +171,11 @@ std::size_t get_object(utils::out_buffer& out,
                        const std::string_view& path,
                        const std::string_view& host,
                        bool use_tls) {
-    auto [url, headers] = inner_get(signer, bucket_name, path, host, use_tls);
-
-    curl::session session;
-    return session.get(url, headers, out);
+    auto get = [&out](const auto& url, const auto& headers) {
+        curl::session session;
+        return session.get(url, headers, out);
+    };
+    return inner_get(signer, bucket_name, path, host, use_tls, get);
 }
 
 std::string set_object(const notary& signer,

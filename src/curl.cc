@@ -5,18 +5,23 @@
 namespace h5s3::curl {
 
 void set_headers(CURL* curl, const std::vector<header>& headers){
-    struct curl_slist *header_list = NULL;
+    curl_slist* header_list = NULL;
 
     for (const header& h : headers){
         std::stringstream s;
         s << h.first << ":" << h.second;
 
         // TODO: Handle NULL here.
-        header_list = curl_slist_append(header_list, s.str().data());
+        curl_slist* head = curl_slist_append(header_list, s.str().data());
 
-        if (!header_list) {
+        if (!head) {
+            if (header_list) {
+                curl_slist_free_all(header_list);
+            }
             throw error("Failed to construct request headers.");
         }
+
+        header_list = head;
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
 }

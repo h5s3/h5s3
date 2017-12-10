@@ -32,6 +32,7 @@ private:
     const std::size_t m_page_cache_size;
     using list_type = std::list<std::tuple<id, page>>;
     mutable list_type m_lru_order;
+    mutable std::size_t m_allocated_pages;
     mutable std::unordered_map<id, typename list_type::iterator> m_page_cache;
 
     class page {
@@ -153,6 +154,7 @@ private:
             // the lru list. We allocate this at the end because the read may
             // fail and we want to reuse the page as early as possible.
             m_lru_order.emplace_back(page_id, page_size());
+            ++m_allocated_pages;
         }
 
         // Fill the page from the kv_store. Note: `m_kv_store.read` MAY throw
@@ -163,43 +165,42 @@ private:
         utils::out_buffer b{p.data(), page_size()};
         m_kv_store.read(page_id, b);
 
-        m_lru_order.splice(m_lru_order.begin(),
-                           m_lru_order,
-                           std::prev(m_lru_order.end()),
-                           m_lru_order.end());
+        if (m_allocated_pages > 1) {
+            m_lru_order.splice(m_lru_order.begin(),
+                               m_lru_order,
+                               std::prev(m_lru_order.end()),
+                               m_lru_order.end());
+        }
         m_page_cache.emplace(page_id, m_lru_order.begin());
         return p;
     }
 
 public:
     table(const kv_store& store, std::size_t page_cache_size)
-        : m_kv_store(store), m_page_cache_size(page_cache_size) {}
+        : m_kv_store(store),
+          m_page_cache_size(page_cache_size),
+          m_allocated_pages(0) {}
 
     table(kv_store&& store, std::size_t page_cache_size)
-        : m_kv_store(std::move(store)), m_page_cache_size(page_cache_size) {}
+        : m_kv_store(std::move(store)),
+          m_page_cache_size(page_cache_size),
+          m_allocated_pages(0) {}
 
     table(table&& mvfrom) noexcept
         : m_kv_store(std::move(mvfrom.m_kv_store)),
           m_page_cache_size(mvfrom.m_page_cache_size),
           m_lru_order(std::move(mvfrom.m_lru_order)),
+          m_allocated_pages(mvfrom.m_allocated_pages),
           m_page_cache(std::move(mvfrom.m_page_cache)) {}
 
     table& operator=(table&& mvfrom) noexcept {
         m_kv_store = std::move(m_kv_store);
         m_page_cache_size = mvfrom.m_page_cache_size;
         m_lru_order = std::move(mvfrom.m_lru_order);
+        m_allocated_pages = mvfrom.m_allocated_pages;
         m_page_cache = std::move(mvfrom.m_page_cache);
 
         return *this;
-    }
-
-    ~table() {
-        try {
-            flush();
-        }
-        catch (...) {
-            // TODO: Do something here.
-        }
     }
 
     /** Access the kv_store that backs this table.
@@ -313,15 +314,17 @@ public:
         id max_page = eoa / m_kv_store.page_size();
         m_kv_store.max_page(max_page);
 
-        for (auto& item : m_lru_order) {
-            std::get<1>(item).invalidate();
+        for (auto& [page_id, p] : m_lru_order) {
+            if (page_id > max_page) {
+                p.invalidate();
+            }
         }
     }
 
     /** Compute the eof from the max_page of `store()`.
      */
     std::size_t eof() const {
-        return m_kv_store.max_page() * page_size();
+        return (m_kv_store.max_page() + 1) * page_size();
     }
 };
 }  // namespace h5s3::page

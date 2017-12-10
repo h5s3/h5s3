@@ -31,12 +31,12 @@ s3_kv_store::s3_kv_store(const std::string& host,
 
         std::regex metadata_regex("page_size=([0-9]+)\n"
                                   "max_page=([0-9]+)\n"
-                                  "invalid_pages={(([0-9]+ )*[0-9]*)}\n");
+                                  "invalid_pages=\\{(([0-9]+ )*[0-9]*)\\}\n");
         std::smatch match;
 
         if (!std::regex_match(result, match, metadata_regex)) {
             std::stringstream s;
-            s << "failed to parse metadata from .meta file: "
+            s << "failed to parse metadata from .meta file:\n"
               << result;
             throw std::runtime_error(s.str());
         }
@@ -163,8 +163,10 @@ void s3_kv_store::read(page::id page_id, utils::out_buffer& out) const {
         if (size != m_page_size) {
             throw std::runtime_error("page was smaller than the page_size");
         }
+
+        return;
     }
-    catch(const curl::http_error& e) {
+    catch (const curl::http_error& e) {
         if (e.code != 404) {
             throw;
         }
@@ -197,6 +199,8 @@ void s3_kv_store::flush() {
         // consume the trailing comma
         formatter.get();
     }
+    formatter << "}\n";
+
     s3::set_object(m_notary,
                    m_bucket,
                    m_path + "/.meta",
