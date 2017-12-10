@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Architecture &mdash; h5s3 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="h5s3 0.0.0 documentation" href="index.html"/>
+        <link rel="next" title="Appendix" href="appendix.html"/>
+        <link rel="prev" title="Performance Tuning" href="performance-tuning.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> h5s3
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="warnings.html">Warnings and Limitations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python (<code class="docutils literal"><span class="pre">h5py</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance-tuning.html">Performance Tuning</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#kv-driver">kv-driver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kv-store">kv-store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#page-table">page table</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">Appendix</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">h5s3</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Architecture</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/architecture.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="architecture">
+<h1>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is a developer level document. It is not necessary to understand this
+document in order to use <code class="docutils literal"><span class="pre">h5s3</span></code>.</p>
+</div>
+<p>The <code class="docutils literal"><span class="pre">h5s3</span></code> code base is split into three logical layers:</p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="appendix.html#_CPPv2N4h5s36driver9kv_driverE" title="h5s3::driver::kv_driver"><code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::driver::kv_driver</span></code></a>: An abstract driver which accepts an
+arbitrary key-value store.</li>
+<li><code class="docutils literal"><span class="pre">kv_store</span></code>: Different implementations of key-value stores which actually
+read and write data.</li>
+<li><a class="reference internal" href="appendix.html#_CPPv2N4h5s34page5tableE" title="h5s3::page::table"><code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::page::table</span></code></a>: An object which translate contiguous memory
+reads and writes in paged access to a key-value store.</li>
+</ol>
+<div class="section" id="kv-driver">
+<h2>kv-driver<a class="headerlink" href="#kv-driver" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="appendix.html#_CPPv2N4h5s36driver9kv_driverE" title="h5s3::driver::kv_driver"><code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::driver::kv_driver</span></code></a> implements the hdf5 driver
+protocol. This object is responsible for handling the C++ exception -&gt; hdf5
+exception conversions and translating raw C values into richer C++ values.</p>
+<p>This layer can be thought of as <code class="docutils literal"><span class="pre">h5s3</span></code>’s membrane to hdf5.</p>
+</div>
+<div class="section" id="kv-store">
+<h2>kv-store<a class="headerlink" href="#kv-store" title="Permalink to this headline">¶</a></h2>
+<p>The kv-store interface defines the low-level operations for interacting with
+fixed-width regions of memory. A kv-store is semantically a map from
+<code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::page::id</span></code> to a page of data. The kv-store needs to be able to
+read or write an entire page at a time. The kv-store does not need to perform
+IO in batches larger or smaller than one page.</p>
+<p>The primary kv-store in <code class="docutils literal"><span class="pre">h5s3</span></code> is <a class="reference internal" href="appendix.html#_CPPv2N4h5s39s3_driver11s3_kv_storeE" title="h5s3::s3_driver::s3_kv_store"><code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::s3_driver::s3_kv_store</span></code></a>
+which implements the kv-store interface to talk to Amazon S3.</p>
+</div>
+<div class="section" id="page-table">
+<h2>page table<a class="headerlink" href="#page-table" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="appendix.html#_CPPv2N4h5s34page5tableE" title="h5s3::page::table"><code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::page::table</span></code></a> maps a virtual contiguous memory space into
+fixed width regions called “pages”. This object is responsible for translating
+the posix-like API calls that hdf5 makes into a sequence of reads and writes in
+a kv-store.</p>
+<p>The <a class="reference internal" href="appendix.html#_CPPv2N4h5s34page5tableE" title="h5s3::page::table"><code class="xref cpp cpp-type docutils literal"><span class="pre">h5s3::page::table</span></code></a> structure also implements caching to reduce
+the number of trips to the underlying kv-store.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="appendix.html" class="btn btn-neutral float-right" title="Appendix" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="performance-tuning.html" class="btn btn-neutral" title="Performance Tuning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Joe Jevnik and Scott Sanderson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

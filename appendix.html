@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Appendix &mdash; h5s3 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="h5s3 0.0.0 documentation" href="index.html"/>
+        <link rel="prev" title="Architecture" href="architecture.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> h5s3
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="warnings.html">Warnings and Limitations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python (<code class="docutils literal"><span class="pre">h5py</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance-tuning.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Appendix</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">h5s3</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Appendix</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/appendix.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="appendix">
+<h1>Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt>
+<span class="target" id="structh5s3_1_1driver_1_1kv__driver"></span><em class="property">template </em>&lt;<em class="property">typename</em> kv_store&gt;</dt>
+<dt id="_CPPv2N4h5s36driver9kv_driverE">
+<span id="h5s3::driver::kv_driver"></span><em class="property">struct </em><code class="descclassname">h5s3::driver::</code><code class="descname">kv_driver</code><a class="headerlink" href="#_CPPv2N4h5s36driver9kv_driverE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Key-value driver for hdf5.</p>
+<p>This driver is polymorphic over the backing key-value store.</p>
+<p><dl class="docutils">
+<dt><strong>Template Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal"><span class="pre">kv_store</span></code>: The type of the backing key-value store. </li>
+</ul>
+</dd>
+</dl>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt>
+<em class="property">template </em>&lt;typename… <em>Extra</em>&gt;</dt>
+<dt id="_CPPv2N4h5s36driver9kv_driver8set_faplE5hid_tNSt6size_tENSt6size_tEDp5Extra">
+<span id="h5s3::driver::kv_driver::set_fapl__hid_t.std::s.std::s.ExtraDp"></span><span class="target" id="structh5s3_1_1driver_1_1kv__driver_1a0666874656395280c7e7cd7d0940fa10"></span><em class="property">static</em> herr_t <code class="descname">set_fapl</code><span class="sig-paren">(</span>hid_t <em>fapl_id</em>, std::size_t <em>page_size</em>, std::size_t <em>page_cache_size</em>, Extra... <em>extra</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s36driver9kv_driver8set_faplE5hid_tNSt6size_tENSt6size_tEDp5Extra" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the parameters on the file access property list.</p>
+<p><dl class="docutils">
+<dt><strong>Return</strong></dt>
+<dd>0 on success, -1 on failure. </dd>
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal"><span class="pre">fapl_id</span></code>: The id of the file access property list to modify. </li>
+<li><code class="docutils literal"><span class="pre">page_size</span></code>: The size of each page. Pass 0 for the default or to read the value out of an existing file. If passed when opening an existing file, it must match. </li>
+<li><code class="docutils literal"><span class="pre">page_cache_size</span></code>: The number of pages to hold in memory. </li>
+<li><code class="docutils literal"><span class="pre">extra</span></code>: The arguments to forward to the kv_store.</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_storeE">
+<span id="h5s3::s3_driver::s3_kv_store"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store"></span><em class="property">class </em><code class="descclassname">h5s3::s3_driver::</code><code class="descname">s3_kv_store</code><a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_storeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The kv-store implementation backed by Amazon S3. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_store11s3_kv_storeERR11s3_kv_store">
+<span id="h5s3::s3_driver::s3_kv_store::s3_kv_store__s3_kv_storeRR"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1a7c7d8e2d3f434374d016c562cb0239d5"></span><code class="descname">s3_kv_store</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv2N4h5s39s3_driver11s3_kv_store11s3_kv_storeERR11s3_kv_store" title="h5s3::s3_driver::s3_kv_store::s3_kv_store">s3_kv_store</a> &amp;&amp;<em>mvfrom</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_store11s3_kv_storeERR11s3_kv_store" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s39s3_driver11s3_kv_store9page_sizeEv">
+<span id="h5s3::s3_driver::s3_kv_store::page_sizeC"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1a00fb51d1e261292def9dab34484236dd"></span>std::size_t <code class="descname">page_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s39s3_driver11s3_kv_store9page_sizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s39s3_driver11s3_kv_store8max_pageEv">
+<span id="h5s3::s3_driver::s3_kv_store::max_pageC"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1aa3ffc7a30c8fa5577c88f88753538373"></span>page::id <code class="descname">max_page</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s39s3_driver11s3_kv_store8max_pageEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_store8max_pageEN4page2idE">
+<span id="h5s3::s3_driver::s3_kv_store::max_page__page::id"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1aec50be99e8abc4c0bced6941c23fe035"></span>void <code class="descname">max_page</code><span class="sig-paren">(</span>page::id <em>max_page</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_store8max_pageEN4page2idE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s39s3_driver11s3_kv_store4readEN4page2idERN5utils10out_bufferE">
+<span id="h5s3::s3_driver::s3_kv_store::read__page::id.utils::out_bufferRC"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1a455fe6f4976dbfc35805a38770c660cc"></span>void <code class="descname">read</code><span class="sig-paren">(</span>page::id <em>page_id</em>, utils::out_buffer &amp;<em>out</em><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s39s3_driver11s3_kv_store4readEN4page2idERN5utils10out_bufferE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_store5writeEN4page2idERKNSt11string_viewE">
+<span id="h5s3::s3_driver::s3_kv_store::write__page::id.std::string_viewCR"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1abdb25a365d20a200dfed311119c73406"></span>void <code class="descname">write</code><span class="sig-paren">(</span>page::id <em>page_id</em>, <em class="property">const</em> std::string_view &amp;<em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_store5writeEN4page2idERKNSt11string_viewE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_store5flushEv">
+<span id="h5s3::s3_driver::s3_kv_store::flush"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1afec39565541dbf92afe943c47f47f5bb"></span>void <code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_store5flushEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="function">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_store11from_paramsERKNSt11string_viewEjNSt6size_tEPKcPKcPKcPKcb">
+<span id="h5s3::s3_driver::s3_kv_store::from_params__std::string_viewCR.unsigned-i.std::s.cCP.cCP.cCP.cCP.b"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1a58e361dae7a761c50a2b7601b7450f1b"></span><a class="reference internal" href="#_CPPv2N4h5s39s3_driver11s3_kv_storeE" title="h5s3::s3_driver::s3_kv_store">s3_kv_store</a> <code class="descname">from_params</code><span class="sig-paren">(</span><em class="property">const</em> std::string_view &amp;<em>uri_view</em>, unsigned int, std::size_t <em>page_size</em>, <em class="property">const</em> char *<em>access_key</em>, <em class="property">const</em> char *<em>secret_key</em>, <em class="property">const</em> char *<em>region</em>, <em class="property">const</em> char *<em>host</em>, bool <em>use_tls</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_store11from_paramsERKNSt11string_viewEjNSt6size_tEPKcPKcPKcPKcb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Attributes</p>
+<dl class="member">
+<dt id="_CPPv2N4h5s39s3_driver11s3_kv_store4nameE">
+<span id="h5s3::s3_driver::s3_kv_store::name__cCP"></span><span class="target" id="classh5s3_1_1s3__driver_1_1s3__kv__store_1aaebca0baea70ba618980b4a0d44e3edb"></span><em class="property">const</em> char *<code class="descname">name</code> = &quot;h5s3&quot;<a class="headerlink" href="#_CPPv2N4h5s39s3_driver11s3_kv_store4nameE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<span class="target" id="classh5s3_1_1page_1_1table"></span><em class="property">template </em>&lt;<em class="property">typename</em> kv_store&gt;</dt>
+<dt id="_CPPv2N4h5s34page5tableE">
+<span id="h5s3::page::table"></span><em class="property">class </em><code class="descclassname">h5s3::page::</code><code class="descname">table</code><a class="headerlink" href="#_CPPv2N4h5s34page5tableE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A page table adapts a <code class="docutils literal"><span class="pre">kv_store</span></code> to present the abstraction of a contiguous memory space. The page table implements caching to reduce the trips to the underlying <code class="docutils literal"><span class="pre">kv_store</span></code>.</p>
+<p><dl class="docutils">
+<dt><strong>Template Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal"><span class="pre">kv_store</span></code>: The underlying key-value store. </li>
+</ul>
+</dd>
+</dl>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv2N4h5s34page5table5storeEv">
+<span id="h5s3::page::table::store"></span><span class="target" id="classh5s3_1_1page_1_1table_1a269f61857aca74a9dd2a70188619bcf3"></span>kv_store &amp;<code class="descname">store</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s34page5table5storeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Access the kv_store that backs this table. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s34page5table5storeEv">
+<span id="h5s3::page::table::storeC"></span><span class="target" id="classh5s3_1_1page_1_1table_1aeff96580cd29fde7a8a9ee87fc6962ab"></span><em class="property">const</em> kv_store &amp;<code class="descname">store</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s34page5table5storeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Access the kv_store that backs this table. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s34page5table4readENSt6size_tERN5utils10out_bufferE">
+<span id="h5s3::page::table::read__std::s.utils::out_bufferRC"></span><span class="target" id="classh5s3_1_1page_1_1table_1a0f221b1269f2ea85eb5bec89708d3475"></span>void <code class="descname">read</code><span class="sig-paren">(</span>std::size_t <em>addr</em>, utils::out_buffer &amp;<em>buffer</em><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s34page5table4readENSt6size_tERN5utils10out_bufferE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Read data from the page table.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal"><span class="pre">addr</span></code>: The start address of the read. </li>
+<li><code class="docutils literal"><span class="pre">buffer</span></code>: The output buffer to fill. </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N4h5s34page5table5writeENSt6size_tERKNSt11string_viewE">
+<span id="h5s3::page::table::write__std::s.std::string_viewCR"></span><span class="target" id="classh5s3_1_1page_1_1table_1ab45a5f01eb17e8a75aa495c495a3a994"></span>void <code class="descname">write</code><span class="sig-paren">(</span>std::size_t <em>addr</em>, <em class="property">const</em> std::string_view &amp;<em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s34page5table5writeENSt6size_tERKNSt11string_viewE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Write data into the page table.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal"><span class="pre">addr</span></code>: The start address of the write. </li>
+<li><code class="docutils literal"><span class="pre">data</span></code>: The data to write into the table. </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N4h5s34page5table5flushEv">
+<span id="h5s3::page::table::flush"></span><span class="target" id="classh5s3_1_1page_1_1table_1a8a4c3eb5fbfd02d3b0ad5c3d602d40e0"></span>void <code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s34page5table5flushEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Flush the internal caches back to <code class="docutils literal"><a class="reference internal" href="#classh5s3_1_1page_1_1table_1a269f61857aca74a9dd2a70188619bcf3"><span class="std std-ref"><span class="pre">store()</span></span></a></code>. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s34page5table5flushEv">
+<span id="h5s3::page::table::flushC"></span><span class="target" id="classh5s3_1_1page_1_1table_1a4d93e90a0c82f569670836fcd47a0532"></span>void <code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s34page5table5flushEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Flush the internal caches back to <code class="docutils literal"><a class="reference internal" href="#classh5s3_1_1page_1_1table_1a269f61857aca74a9dd2a70188619bcf3"><span class="std std-ref"><span class="pre">store()</span></span></a></code>. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2N4h5s34page5table8truncateENSt6size_tE">
+<span id="h5s3::page::table::truncate__std::s"></span><span class="target" id="classh5s3_1_1page_1_1table_1aa1f6e6d34fa049cc2b92aab7f5da6b94"></span>void <code class="descname">truncate</code><span class="sig-paren">(</span>std::size_t <em>eoa</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv2N4h5s34page5table8truncateENSt6size_tE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Truncate the backing kv_store to the semantic end of address space.</p>
+<p><dl class="docutils">
+<dt><strong>Parameters</strong></dt>
+<dd><ul class="breatheparameterlist first last simple">
+<li><code class="docutils literal"><span class="pre">eoa</span></code>: The end of address space to set. </li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv2NK4h5s34page5table3eofEv">
+<span id="h5s3::page::table::eofC"></span><span class="target" id="classh5s3_1_1page_1_1table_1a6a15733ae11f4452359b76434c7d5e95"></span>std::size_t <code class="descname">eof</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv2NK4h5s34page5table3eofEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Compute the eof from the max_page of <code class="docutils literal"><a class="reference internal" href="#classh5s3_1_1page_1_1table_1a269f61857aca74a9dd2a70188619bcf3"><span class="std std-ref"><span class="pre">store()</span></span></a></code>. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="architecture.html" class="btn btn-neutral" title="Architecture" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Joe Jevnik and Scott Sanderson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

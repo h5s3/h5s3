@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>h5s3 &mdash; h5s3 0.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="h5s3 0.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> h5s3
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../warnings.html">Warnings and Limitations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python.html">Python (<code class="docutils literal"><span class="pre">h5py</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance-tuning.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../appendix.html">Appendix</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">h5s3</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>h5s3</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for h5s3</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="kn">from</span> <span class="nn">._h5s3</span> <span class="k">import</span> <span class="n">set_fapl</span> <span class="k">as</span> <span class="n">_set_fapl</span>
+
+
+<div class="viewcode-block" id="set_fapl"><a class="viewcode-back" href="../python.html#h5s3.set_fapl">[docs]</a><span class="k">def</span> <span class="nf">set_fapl</span><span class="p">(</span><span class="n">plist</span><span class="p">,</span>
+             <span class="n">aws_access_key</span><span class="p">,</span>
+             <span class="n">aws_secret_key</span><span class="p">,</span>
+             <span class="n">aws_region</span><span class="o">=</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">,</span>
+             <span class="n">page_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+             <span class="n">page_cache_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+             <span class="n">host</span><span class="o">=</span><span class="s1">&#39;s3.amazonaws.com&#39;</span><span class="p">,</span>
+             <span class="n">use_tls</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Set the fapl for the h5s3 driver.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plist : PropFAID</span>
+<span class="sd">        The property list.</span>
+<span class="sd">    aws_access_key : str</span>
+<span class="sd">        Your amazon access key id.</span>
+<span class="sd">    aws_secret_key : str</span>
+<span class="sd">        Your amazon secret key.</span>
+<span class="sd">    page_size : int, optional</span>
+<span class="sd">        The size of a data page.</span>
+<span class="sd">    page_cache_size : int, optional</span>
+<span class="sd">        The number of pages to cache in memory.</span>
+<span class="sd">    host : str, optional</span>
+<span class="sd">        The host for the aws API to ues.</span>
+<span class="sd">    use_tls : bool, optional</span>
+<span class="sd">        Connect to the aws API with TLS.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    All arguments except for ``plist`` will be forwarded from</span>
+<span class="sd">    :class:`h5py.File`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">page_size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;page_size must be &gt;= 0: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">page_size</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">page_cache_size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;page_cache_size must be &gt;= 0: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">page_cache_size</span><span class="p">)</span>
+
+    <span class="n">_set_fapl</span><span class="p">(</span>
+        <span class="n">plist</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">page_size</span><span class="p">,</span>
+        <span class="n">page_cache_size</span><span class="p">,</span>
+        <span class="n">aws_access_key</span><span class="p">,</span>
+        <span class="n">aws_secret_key</span><span class="p">,</span>
+        <span class="n">aws_region</span><span class="p">,</span>
+        <span class="n">host</span><span class="p">,</span>
+        <span class="n">use_tls</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="register"><a class="viewcode-back" href="../python.html#h5s3.register">[docs]</a><span class="k">def</span> <span class="nf">register</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Register the h5s3 driver with h5py.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :func:`h5s3.unregiser`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h5py</span><span class="o">.</span><span class="n">register_driver</span><span class="p">(</span><span class="s1">&#39;h5s3&#39;</span><span class="p">,</span> <span class="n">set_fapl</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unregiser"><a class="viewcode-back" href="../python.html#h5s3.unregiser">[docs]</a><span class="k">def</span> <span class="nf">unregiser</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Unregister the h5s3 driver with h5py.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :func:`h5s3.regiser`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h5py</span><span class="o">.</span><span class="n">unregister_driver</span><span class="p">(</span><span class="s1">&#39;h5s3&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Joe Jevnik and Scott Sanderson.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
