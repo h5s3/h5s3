@@ -44,3 +44,5 @@ examples/
 .compiler_flags
 
 bindings/python/h5s3.egg-info/*
+
+testbin
