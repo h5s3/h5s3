@@ -18,7 +18,7 @@ namespace h5s3::testing {
     exits.
 
     @param args Vector of strings to pass as the command line of the process.
-    @param env Vector of string key-value to pass as the process environment.
+    @param env Vector of string key-value pairs to pass as the process environment.
  */
 class process {
 
