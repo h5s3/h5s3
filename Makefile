@@ -9,6 +9,7 @@ HDF5_INCLUDE_PATH ?=
 HDF5_LIBRARY_PATH ?=
 HDF5_LIBRARY ?= hdf5
 
+CLANG_TIDY ?= clang-tidy
 GTEST_BREAK ?= 1
 
 ifneq ($(HDF5_LIBRARY_PATH),)
@@ -131,6 +132,9 @@ python: .compiler_flags
 	CXXFLAGS='$(CXXFLAGS)' \
 	LDFLAGS='$(LDFLAGS)' \
 	python setup.py build_ext --inplace
+
+tidy:
+	$(CLANG_TIDY) src/curl.cc -checks=-*,clang-analyzer-*,clang-analyzer-* -- --std=gnu++17 $(INCLUDE)
 
 .PHONY: clean
 clean:
