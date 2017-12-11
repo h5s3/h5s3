@@ -38,10 +38,16 @@ endif
 
 ASAN_OPTIONS := symbolize=1
 ASAN_SYMBOLIZER_PATH ?= llvm-symbolizer
-ifeq ($(ADDRESS_SANITIZE), 1)
+ifeq ($(SANITIZE_ADDRESS), 1)
 	OPTLEVEL := 0
 	CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer -static-libasan
 	LDFLAGS += -fsanitize=address -static-libasan
+endif
+
+ifeq ($(SANITIZE_UNDEFINED), 1)
+	OPTLEVEL := 0
+	CXXFLAGS += -fsanitize=undefined
+	LDFLAGS += -lubsan
 endif
 
 SOURCES := $(wildcard src/*.cc)
