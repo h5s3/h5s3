@@ -63,7 +63,6 @@ public:
         }
         c_env.push_back(NULL);
 
-
         // fork/exec
         pid_t result = fork();
         if (-1 == result) {
