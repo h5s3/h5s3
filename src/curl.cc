@@ -4,16 +4,15 @@
 
 namespace h5s3::curl {
 
-void set_headers(CURL* curl, const std::vector<header>& headers){
+owned_header_list __attribute__((warn_unused_result))
+set_headers(CURL* curl, const std::vector<header>& headers) {
     curl_slist* header_list = NULL;
 
     for (const header& h : headers){
         std::stringstream s;
         s << h.first << ":" << h.second;
 
-        // TODO: Handle NULL here.
         curl_slist* head = curl_slist_append(header_list, s.str().data());
-
         if (!head) {
             if (header_list) {
                 curl_slist_free_all(header_list);
@@ -24,6 +23,7 @@ void set_headers(CURL* curl, const std::vector<header>& headers){
         header_list = head;
     }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
+    return owned_header_list(header_list);
 }
 
 namespace {
@@ -45,7 +45,6 @@ using write_callback_type = std::size_t (*)(char*,
 
 void set_common_request_fields_str(CURL *curl,
                                    const std::string_view& url,
-                                   const std::vector<header>& headers,
                                    std::string& output_buffer,
                                    std::array<char, CURL_ERROR_SIZE>& error_message_buffer) {
     curl_easy_setopt(curl, CURLOPT_URL, url.data());
@@ -60,18 +59,14 @@ void set_common_request_fields_str(CURL *curl,
         return size * nmemb;
     };
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-    set_headers(curl, headers);
 }
 
 void set_common_request_fields_out_buffer(CURL *curl,
                                           const std::string_view& url,
-                                          const std::vector<header>& headers,
                                           utils::out_buffer& output_buffer,
                                           std::array<char, CURL_ERROR_SIZE>& error_message_buffer) {
     curl_easy_setopt(curl, CURLOPT_URL, url.data());
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error_message_buffer.data());
-
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output_buffer);
 
     write_callback_type write_callback = [](char* ptr,
@@ -88,12 +83,13 @@ void set_common_request_fields_out_buffer(CURL *curl,
         return write_size;
     };
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-
-    set_headers(curl, headers);
 }
 
 long perform_request(CURL* curl,
+                     const std::vector<header>& headers,
                      const std::array<char, CURL_ERROR_SIZE>& error_message_buffer) {
+
+    owned_header_list headers_to_free(set_headers(curl, headers));
 
     CURLcode error_code = curl_easy_perform(curl);
 
@@ -131,11 +127,10 @@ std::string session::get(const std::string_view& url,
 
     set_common_request_fields_str(m_curl.get(),
                                   url,
-                                  headers,
                                   out,
                                   error_buffer);
 
-    long code = perform_request(m_curl.get(), error_buffer);
+    long code = perform_request(m_curl.get(), headers, error_buffer);
     throw_for_status(code, out);
 
     return out;
@@ -152,11 +147,10 @@ std::size_t session::get(const std::string_view& url,
 
     set_common_request_fields_out_buffer(m_curl.get(),
                                          url,
-                                         headers,
                                          copy,
                                          error_buffer);
 
-    long code = perform_request(m_curl.get(), error_buffer);
+    long code = perform_request(m_curl.get(), headers, error_buffer);
     throw_for_status(code, {out.data(), out.size()});
 
     return copy.data() - out.data();
@@ -178,11 +172,10 @@ std::string session::put(const std::string_view& url,
 
     set_common_request_fields_str(m_curl.get(),
                                   url,
-                                  headers,
                                   out,
                                   error_buffer);
 
-    long code = perform_request(m_curl.get(), error_buffer);
+    long code = perform_request(m_curl.get(), headers, error_buffer);
     throw_for_status(code, out);
 
     return out;

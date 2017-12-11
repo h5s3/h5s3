@@ -23,6 +23,14 @@ public:
     }
 };
 
+class curl_slist_deleter {
+public:
+    void operator()(curl_slist* ptr) {
+        curl_slist_free_all(ptr);
+    }
+};
+typedef std::unique_ptr<curl_slist, curl_slist_deleter> owned_header_list;
+
 class error : public std::runtime_error {
 public:
     explicit error(const std::string& message) : std::runtime_error(message) {}
