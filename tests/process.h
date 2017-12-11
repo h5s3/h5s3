@@ -9,7 +9,23 @@ namespace fs = std::experimental::filesystem;
 
 namespace h5s3::testing {
 
+
+/** Class for managing the lifetime of an external process.
+
+    This class creates a new process via fork/exec upon construction. Callers
+    **MUST** call `join()` before this object goes out of scope. If this object
+    will call `std::terminate()` if it is destroyed before its managed process
+    exits.
+
+    @param args Vector of strings to pass as the command line of the process.
+    @param env Vector of string key-value to pass as the process environment.
+ */
 class process {
+
+private:
+    std::vector<std::string> m_argv;
+    std::vector<std::string> m_envp;
+    pid_t m_pid;
 
 public:
     using environment = std::vector<std::pair<std::string, std::string>>;
@@ -31,27 +47,18 @@ public:
         explicit error(const std::string& message) : std::runtime_error(message) {}
     };
 
-private:
-    std::vector<std::string> m_argv;
-    std::vector<std::string> m_envp;
-    pid_t m_pid;
-
-public:
-    process(std::vector<std::string>& args,
-            environment& env) {
+    process(const std::vector<std::string>& args,
+            const environment& env) : m_argv(args) {
 
         // Initialize argv.
-        for (unsigned int i = 0; i < args.size(); ++i) {
-            m_argv.emplace_back(args[i]);
-        }
         std::vector<char *> c_args;
         for (auto& str : m_argv) {
             c_args.push_back(str.data());
         }
-        c_args.push_back(NULL);
+        c_args.push_back(nullptr);
 
         // Initialize envp.
-        for (unsigned int i = 0; i < env.size(); ++i) {
+        for (size_t i = 0; i < env.size(); ++i) {
             std::stringstream fmt;
             auto& [k, v] = env[i];
             fmt << k << "=" << v;
@@ -61,38 +68,76 @@ public:
         for (auto& str : m_envp) {
             c_env.emplace_back(str.data());
         }
-        c_env.push_back(NULL);
+        c_env.push_back(nullptr);
 
-        // fork/exec
-        pid_t result = fork();
-        if (-1 == result) {
+        // Do the fork/exect.
+        m_pid = fork();
+        if (-1 == m_pid) {
             throw error("Failed to fork new process.");
         }
-
-        if(!result) {
-            // We're the child;
+        if(!m_pid) {
+            // We're the child.
             execvpe(c_args[0], c_args.data(), c_env.data());
             throw error("Failed to exec new process.");
         }
-        m_pid = result;
     }
 
+    ~process() {
+        try {
+            if (running()) {
+                kill(m_pid, SIGKILL);
+                std::terminate();
+            }
+        }
+        catch (const error& e) {
+        }
+    }
+
+    /** Check if the process is running.
+     */
+    bool running() {
+        if (kill(m_pid, 0)) {
+            if (ESRCH == errno) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Send a SIGINT to the process.
+     */
     void interrupt() {
         if (kill(m_pid, SIGINT)) {
-            if(ESRCH != errno) {
+            if (ESRCH != errno) {
                 throw error("Failed to send SIGINT.");
             }
         }
     }
 
+    /** Send a SIGTERM to the process.
+     */
     void terminate() {
         if (kill(m_pid, SIGTERM)) {
-            if(ESRCH != errno) {
+            if (ESRCH != errno) {
                 throw error("Failed to send SIGTERM.");
             }
         }
     }
 
+    /** Wait for the process to exit.
+
+        @return A struct indicating the exit status of the process and the
+                cause of exit.
+
+                If the process exited normally, status.process_state will be
+                `process::state::EXITED`, status.code will be set to the
+                process' exit code.
+
+                If the process exited due to receipt of a signal,
+                status.process_state will be `process::state::SIGNALED`, and
+                status.code will be the number of the signal that caused
+                termination.
+     */
     status join() {
         int status;
         pid_t result = waitpid(m_pid, &status, 0);
@@ -109,6 +154,8 @@ public:
         }
     }
 
+    /** The pid of the managed process.
+     */
     pid_t pid() const {
         return m_pid;
     }

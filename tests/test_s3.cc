@@ -20,7 +20,11 @@ public:
     static std::string REGION;
     static std::unique_ptr<process> minio_proc;
 
+    s3::notary notary;
+
 protected:
+
+    S3Test() : notary(REGION, ACCESS_KEY, SECRET_KEY) {};
 
     static void SetUpTestCase() {
         auto path = fs::temp_directory_path();
@@ -45,12 +49,12 @@ protected:
         sleep(1);  // Give it a second to come up.
 
         // Create a bucket with mc.
-        std::string mc_config = path / "mc-config/";
-        auto mc_command = [&mc_config](std::vector<std::string> extra){
+        std::string mc_config = path / "mc-config";
+        auto mc_command = [&mc_config](const std::vector<std::string>& extra){
             std::vector<std::string> argv = {
                 "testbin/mc",
-                "--config-folder", mc_config,
                 "--quiet",
+                "--config-folder", mc_config,
             };
             argv.insert(argv.end(), extra.begin(), extra.end());
             process::environment env = {{"PATH", std::getenv("PATH")}};
@@ -81,19 +85,15 @@ std::string S3Test::REGION("us-west-2");
 std::unique_ptr<process> S3Test::minio_proc = nullptr;
 
 TEST_F(S3Test, set_then_get) {
-    s3::notary signer(REGION, ACCESS_KEY, SECRET_KEY);
-
     auto key = "some/key";
     for (auto content : {"content1", "content2", "content3"}) {
-        s3::set_object(signer, TEST_BUCKET, key, content, MINIO_ADDRESS, false);
-        std::string result = s3::get_object(signer, TEST_BUCKET, key, MINIO_ADDRESS, false);
+        s3::set_object(notary, TEST_BUCKET, key, content, MINIO_ADDRESS, false);
+        std::string result = s3::get_object(notary, TEST_BUCKET, key, MINIO_ADDRESS, false);
         EXPECT_EQ(result, content);
     }
 }
 
 TEST_F(S3Test, get_nonexistent) {
-    s3::notary signer(REGION, ACCESS_KEY, SECRET_KEY);
     auto key = "some/non/existent/key";
-
-    EXPECT_THROW({ s3::get_object(signer, TEST_BUCKET, key, MINIO_ADDRESS, false); }, h5s3::curl::http_error);
+    EXPECT_THROW({ s3::get_object(notary, TEST_BUCKET, key, MINIO_ADDRESS, false); }, h5s3::curl::http_error);
 }

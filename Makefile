@@ -101,8 +101,18 @@ examples/%: examples/%.o $(SONAME)
 example-%: examples/%
 	LD_LIBRARY_PATH=. $<
 
+testbin/minio:
+	mkdir testbin || true
+	curl -L https://dl.minio.io/server/minio/release/linux-amd64/minio > $@
+	chmod +x $@
+
+testbin/mc:
+	mkdir testbin || true
+	curl -L https://dl.minio.io/client/mc/release/linux-amd64/mc > $@
+	chmod +x $@
+
 .PHONY: test
-test: $(TESTRUNNER)
+test: $(TESTRUNNER) testbin/minio testbin/mc
 	@LD_LIBRARY_PATH=. $<
 
 .PHONY: gdbtest
