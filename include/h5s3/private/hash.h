@@ -4,8 +4,8 @@
 
 namespace h5s3::hash {
 
-typedef std::array<unsigned char, SHA256_DIGEST_LENGTH> sha256;
-typedef std::array<unsigned char, SHA256_DIGEST_LENGTH * 2> sha256_hex;
+using sha256 = std::array<unsigned char, SHA256_DIGEST_LENGTH>;
+using sha256_hex = std::array<unsigned char, SHA256_DIGEST_LENGTH * 2>;
 
 constexpr std::array<char, 16> hexcodes({'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'});
 

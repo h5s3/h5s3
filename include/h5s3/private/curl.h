@@ -12,13 +12,12 @@
 
 namespace h5s3::curl {
 
-typedef std::pair<std::string_view, std::string_view> header;
-typedef std::pair<std::string_view, std::string_view> query_param;
+using header = std::pair<std::string_view, std::string_view>;
+using query_param = std::pair<std::string_view, std::string_view>;
 
 class curl_deleter {
 public:
     void operator()(CURL* ptr) {
-        // TODO: check if we need to free ptr here.
         curl_easy_cleanup(ptr);
     }
 };
@@ -29,7 +28,7 @@ public:
         curl_slist_free_all(ptr);
     }
 };
-typedef std::unique_ptr<curl_slist, curl_slist_deleter> owned_header_list;
+using owned_header_list = std::unique_ptr<curl_slist, curl_slist_deleter>;
 
 class error : public std::runtime_error {
 public:
