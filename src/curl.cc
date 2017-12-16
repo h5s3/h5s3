@@ -4,7 +4,7 @@
 
 namespace h5s3::curl {
 
-owned_header_list __attribute__((warn_unused_result))
+[[ nodiscard ]] owned_header_list
 set_headers(CURL* curl, const std::vector<header>& headers) {
     curl_slist* header_list = NULL;
 
