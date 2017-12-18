@@ -64,11 +64,11 @@ def register():
     h5py.register_driver('h5s3', set_fapl)
 
 
-def unregiser():
+def unregister():
     """Unregister the h5s3 driver with h5py.
 
     See Also
     --------
-    :func:`h5s3.regiser`
+    :func:`h5s3.register`
     """
     h5py.unregister_driver('h5s3')

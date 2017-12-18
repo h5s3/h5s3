@@ -40,6 +40,6 @@ API
 
 .. autofunction:: h5s3.register
 
-.. autofunction:: h5s3.unregiser
+.. autofunction:: h5s3.unregister
 
 .. autofunction:: h5s3.set_fapl

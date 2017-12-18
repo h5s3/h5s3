@@ -324,7 +324,8 @@ public:
     /** Compute the eof from the max_page of `store()`.
      */
     std::size_t eof() const {
-        return (m_kv_store.max_page() + 1) * page_size();
+        return m_kv_store.empty() ? 0
+                                  : (m_kv_store.max_page() + 1) * page_size();
     }
 };
 }  // namespace h5s3::page

@@ -125,12 +125,17 @@ test: $(TESTRUNNER) testbin/minio testbin/mc
 gdbtest: $(TESTRUNNER)
 	@LD_LIBRARY_PATH=. GTEST_BREAK_ON_FAILURE=$(GTEST_BREAK) gdb -ex run $<
 
+tests/test_python.o: tests/test_python.cc .compiler_flags python
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@ \
+		$(shell python-config --includes)
+
 tests/%.o: tests/%.cc .compiler_flags
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@
 
 $(TESTRUNNER): gtest.a $(TEST_OBJECTS) $(SONAME)
 	$(CXX) -o $@ $(TEST_OBJECTS) gtest.a -I $(GTEST_DIR)/include \
-		-lpthread -L. -l$(LIBRARY) $(LDFLAGS)
+		-lpthread -L. -l$(LIBRARY) $(LDFLAGS) \
+		$(shell python-config --ldflags)
 
 gtest.o: $(GTEST_SRCS) .compiler_flags
 	$(CXX) $(CXXFLAGS) -I $(GTEST_DIR) -I $(GTEST_DIR)/include -c \

@@ -19,6 +19,7 @@ s3_kv_store::s3_kv_store(const std::string& host,
       m_bucket(bucket),
       m_path(path),
       m_notary(region, access_key, secret_key),
+      m_empty(true),
       m_max_page(0),
       m_page_size(page_size) {
 
@@ -67,6 +68,8 @@ s3_kv_store::s3_kv_store(const std::string& host,
                 m_invalid_pages.insert(page_id);
             }
         }
+
+        m_empty = false;
     }
     catch (const curl::http_error& e) {
         if (e.code != 404) {
@@ -183,6 +186,7 @@ void s3_kv_store::write(page::id page_id, const std::string_view& data) {
                    data,
                    m_host,
                    m_use_tls);
+    m_empty = false;
     m_max_page = std::max(m_max_page, page_id);
     m_invalid_pages.erase(page_id);
 }

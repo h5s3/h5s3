@@ -16,6 +16,7 @@ private:
     const std::string m_bucket;
     const std::string m_path;
     s3::notary m_notary;
+    bool m_empty;
     page::id m_max_page;
     std::size_t m_page_size;
     std::unordered_set<page::id> m_invalid_pages;
@@ -58,6 +59,10 @@ public:
     }
 
     void max_page(page::id max_page);
+
+    inline bool empty() const {
+        return m_empty;
+    }
 
     void read(page::id page_id, utils::out_buffer& out) const;
     void write(page::id page_id, const std::string_view& data);

@@ -1,9 +1,11 @@
-#include "unistd.h"
-#include "wait.h"
+#pragma once
+
 #include <cassert>
 #include <experimental/filesystem>
 #include <optional>
 #include <signal.h>
+#include <unistd.h>
+#include <wait.h>
 
 namespace fs = std::experimental::filesystem;
 
@@ -89,7 +91,7 @@ public:
                 std::terminate();
             }
         }
-        catch (const error& e) {
+        catch (const error&) {
         }
     }
 
