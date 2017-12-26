@@ -1,5 +1,10 @@
 #pragma once
 
+#include <algorithm>
+#include <cerrno>
+
+#include "h5s3/private/utils.h"
+
 #include "process.h"
 
 namespace fs = std::experimental::filesystem;
@@ -14,6 +19,41 @@ private:
     std::string m_minio_address;
     std::string m_region;
     std::unique_ptr<process> m_minio_proc;
+    fs::path m_minio_root;
+
+    /** Create a new, unique, temporary directory.
+     */
+    static fs::path temp_directory() {
+        using namespace h5s3::utils;
+
+        auto random_char = []() {
+            auto options = "abcdefghijklmnopqrstuvwxyz0123456789"_array;
+            return options[std::rand() % options.size()];
+        };
+
+        // generate a possible temporary directory path
+        auto generate_candidate = [&]() {
+            auto leaf = "h5s3-xxxxxx"_array;
+            std::generate(std::next(leaf.begin(), 5), leaf.end(), random_char);
+            return fs::temp_directory_path() / std::string(leaf.data(),
+                                                           leaf.size());
+        };
+
+        fs::path out;
+        std::error_code ec;
+        while (!fs::create_directory(out = generate_candidate(), ec)) {
+            // The directory couldn't be created; this either means it already
+            // exists or an error occurred.
+            if (ec) {
+                // An error occurred, throw the exception.
+                throw std::runtime_error(ec.message());
+            }
+            // No error occurred, this means the directory already exists,
+            // try again.
+        }
+
+        return out;
+    }
 
 public:
 
@@ -22,9 +62,9 @@ public:
           m_secret_key("TESTINGSECRETKEYXXXXXXXXXXXXXXXXXXXXXXXX"),
           m_test_bucket("test-bucket"),
           m_minio_address("localhost:9999"),
-          m_region("us-west-2") {
-        auto path = fs::temp_directory_path();
-        std::string minio_config = path / "minio-config/";
+          m_region("us-west-2"),
+          m_minio_root(temp_directory()) {
+        std::string minio_config = m_minio_root / "minio-config/";
 
         // Start minio server.
         std::vector<std::string> args = {
@@ -33,7 +73,7 @@ public:
             "--quiet",
             "--config-dir", minio_config,
             "--address", m_minio_address,
-            path / "minio-data",
+            m_minio_root / "minio-data",
         };
         process::environment env = {
             {"MINIO_ACCESS_KEY", m_access_key},
@@ -45,7 +85,7 @@ public:
         sleep(1);  // Give it a second to come up.
 
         // Create a bucket with mc.
-        std::string mc_config = path / "mc-config";
+        std::string mc_config = m_minio_root / "mc-config";
         auto mc_command = [&mc_config](const std::vector<std::string>& extra){
             std::vector<std::string> argv = {
                 "testbin/mc",
@@ -72,6 +112,7 @@ public:
     ~minio() {
         m_minio_proc->terminate();
         m_minio_proc->join();
+        fs::remove_all(m_minio_root);
     }
 
     const std::string& region() const {

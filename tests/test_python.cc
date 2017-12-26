@@ -129,6 +129,7 @@ std::string format_current_python_exception(PyObject* pybuffer) {
     return PyUnicode_AsUTF8(contents.get());
 }
 void python_test(const std::string_view& test_name,
+                 std::size_t line,
                  const scoped_ref& PYTHON_NAMESPACE,
                  const std::string_view& python_source) {
     clear_pyerr clear;
@@ -144,19 +145,37 @@ void python_test(const std::string_view& test_name,
     ASSERT_FALSE(PyObject_SetAttrString(sys.get(), "stderr", buf.get()))
         << "failed to set sys.stderr";
 
+    std::stringstream full_source;
+
+    // the line number reported is the *last* line of the macro, we need to
+    // subtract out the newlines from the python_source
+    std::size_t lines_in_source = std::count(python_source.begin(),
+                                             python_source.end(),
+                                             '\n');
+
+    // Add a bunch of newlines so that the errors in the tests correspond to
+    // the line of the files. Subtract some lines to account for the code we
+    // inject around the test source.
+    for (std::size_t n = 0; n < line - lines_in_source - 3; ++n) {
+        full_source << '\n';
+    }
+
     // Put the user's test in a function. We share a module dict in this test
     // suite so assignments in a test should not bleed into other tests.
-    // TODO: compile a custom code object for the function so that errors
-    // report the correct file and line number.
-    std::stringstream full_source;
     full_source << "def " << test_name << "():\n"
+                << "    test_name = '" << test_name << "'\n"
                 << python_source << "\n"
                 << test_name << "()";
 
-    scoped_ref result(PyRun_String(full_source.str().data(),
-                                   Py_file_input,
-                                   PYTHON_NAMESPACE.get(),
-                                   PYTHON_NAMESPACE.get()));
+    scoped_ref code_object(Py_CompileString(full_source.str().data(),
+                                            __FILE__,
+                                            Py_file_input));
+    ASSERT_TRUE(code_object.get())
+        << format_current_python_exception(buf.get());
+
+    scoped_ref result(PyEval_EvalCode(code_object.get(),
+                                      PYTHON_NAMESPACE.get(),
+                                      PYTHON_NAMESPACE.get()));
 
     ASSERT_TRUE(result.get()) << format_current_python_exception(buf.get());
 }
@@ -170,7 +189,10 @@ void python_test(const std::string_view& test_name,
  */
 #define PYTHON_TEST(name, python_source)                                \
     TEST_F(PythonTest, name) {                                          \
-        ::detail::python_test(#name, PYTHON_NAMESPACE, python_source); \
+        ::detail::python_test(#name,                                    \
+                              __LINE__,                                 \
+                              PYTHON_NAMESPACE,                         \
+                              python_source);                           \
     }
 
 PYTHON_TEST(register_and_unregister, R"(
@@ -199,7 +221,7 @@ PYTHON_TEST(simple_dataset, R"(
     h5s3.register()
 
     file = h5py.File(
-        f's3://{bucket}/simple_dataset',
+        f's3://{bucket}/{test_name}',
         'w',
         driver='h5s3',
         aws_access_key=access_key,
@@ -227,4 +249,60 @@ PYTHON_TEST(simple_dataset, R"(
 
     # assert that we get the same result when we read the data back
     np.testing.assert_array_equal(file['dataset'][:], data)
+)")
+
+PYTHON_TEST(simple_attribute, R"(
+    import h5py
+
+    import h5s3
+
+    h5s3.register()
+
+    file = h5py.File(
+        f's3://{bucket}/{test_name}',
+        'w',
+        driver='h5s3',
+        aws_access_key=access_key,
+        aws_secret_key=secret_key,
+        aws_region=region,
+        host=address,
+        use_tls=False,
+    )
+
+    assert dict(file.attrs) == {}, 'non-empty default attributes'
+    file.attrs['attr-0'] = 'ayy'
+    file.attrs['attr-1'] = 'lmao'
+
+    assert dict(file.attrs) == {'attr-0': 'ayy', 'attr-1': 'lmao'}, (
+        dict(file.attrs)
+    )
+)")
+
+PYTHON_TEST(simple_group, R"(
+    import h5py
+    import numpy as np
+
+    import h5s3
+
+    h5s3.register()
+
+    file = h5py.File(
+        f's3://{bucket}/{test_name}',
+        'w',
+        driver='h5s3',
+        aws_access_key=access_key,
+        aws_secret_key=secret_key,
+        aws_region=region,
+        host=address,
+        use_tls=False,
+    )
+
+    group = file.create_group('ayy')
+    data = np.arange(15).reshape(5, 3)
+    group['lmao'] = data
+
+    assert set(file.keys()) == {'ayy'}, set(file.keys())
+    assert set(group.keys()) == {'lmao'}, set(group.keys())
+
+    np.testing.assert_array_equal(group['lmao'][:], data)
 )")

@@ -73,6 +73,12 @@ TEST_HEADERS := $(wildcard tests/*.h)  $(GTEST_HEADERS)
 TEST_INCLUDE := -I tests -I $(GTEST_DIR)/include
 TESTRUNNER := tests/run
 
+ALL_SOURCES := $(SOURCES) $(EXAMPLE_SOURCES) $(TEST_SOURCES)
+ALL_HEADERS := include/h5s3/**.h
+
+PYTHON_SONAME := _h5s3$(shell python-config --extension-suffix)
+PYTHON_EXTENSION := bindings/python/h5s3/$(PYTHON_SONAME)
+
 .PHONY: all
 all: $(SONAME)
 
@@ -125,7 +131,7 @@ test: $(TESTRUNNER) testbin/minio testbin/mc
 gdbtest: $(TESTRUNNER)
 	@LD_LIBRARY_PATH=. GTEST_BREAK_ON_FAILURE=$(GTEST_BREAK) gdb -ex run $<
 
-tests/test_python.o: tests/test_python.cc .compiler_flags python
+tests/test_python.o: tests/test_python.cc .compiler_flags $(PYTHON_EXTENSION)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@ \
 		$(shell python-config --includes)
 
@@ -144,7 +150,7 @@ gtest.o: $(GTEST_SRCS) .compiler_flags
 gtest.a: gtest.o
 	$(AR) $(ARFLAGS) $@ $^
 
-python: .compiler_flags
+$(PYTHON_EXTENSION): .compiler_flags
 	cd bindings/python && \
 	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
 	HDF5_LIBRARY=$(HDF5_LIBRARY) \
@@ -154,8 +160,11 @@ python: .compiler_flags
 	LDFLAGS='$(LDFLAGS)' \
 	python setup.py build_ext --inplace
 
+.PHONY: tidy
 tidy:
-	$(CLANG_TIDY) src/curl.cc -checks=-*,clang-analyzer-*,clang-analyzer-* -- --std=gnu++17 $(INCLUDE)
+	$(CLANG_TIDY) $(ALL_SOURCES) $(ALL_HEADERS) --header-filter=include/ \
+		-checks=-*,clang-analyzer-*,clang-analyzer-* -- --std=gnu++17 \
+		$(INCLUDE) $(TEST_INCLUDE) $(shell python-config --includes)
 
 .PHONY: clean
 clean:

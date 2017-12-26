@@ -16,8 +16,7 @@ private:
     const std::string m_bucket;
     const std::string m_path;
     s3::notary m_notary;
-    bool m_empty;
-    page::id m_max_page;
+    std::size_t m_allocated_pages;
     std::size_t m_page_size;
     std::unordered_set<page::id> m_invalid_pages;
 
@@ -38,7 +37,7 @@ public:
           m_bucket(std::move(mvfrom.m_bucket)),
           m_path(std::move(mvfrom.m_path)),
           m_notary(std::move(mvfrom.m_notary)),
-          m_max_page(mvfrom.m_max_page),
+          m_allocated_pages(mvfrom.m_allocated_pages),
           m_page_size(mvfrom.m_page_size) {}
 
     static s3_kv_store from_params(const std::string_view& uri_view,
@@ -55,13 +54,13 @@ public:
     }
 
     inline page::id max_page() const {
-        return m_max_page;
+        return m_allocated_pages - 1;
     }
 
     void max_page(page::id max_page);
 
-    inline bool empty() const {
-        return m_empty;
+    std::size_t allocated_pages() const {
+        return m_allocated_pages;
     }
 
     void read(page::id page_id, utils::out_buffer& out) const;

@@ -19,8 +19,7 @@ s3_kv_store::s3_kv_store(const std::string& host,
       m_bucket(bucket),
       m_path(path),
       m_notary(region, access_key, secret_key),
-      m_empty(true),
-      m_max_page(0),
+      m_allocated_pages(0),
       m_page_size(page_size) {
 
     try {
@@ -31,7 +30,7 @@ s3_kv_store::s3_kv_store(const std::string& host,
                                             m_use_tls);
 
         std::regex metadata_regex("page_size=([0-9]+)\n"
-                                  "max_page=([0-9]+)\n"
+                                  "allocated_pages=([0-9]+)\n"
                                   "invalid_pages=\\{(([0-9]+ )*[0-9]*)\\}\n");
         std::smatch match;
 
@@ -58,7 +57,7 @@ s3_kv_store::s3_kv_store(const std::string& host,
 
         {
             std::stringstream s(match[2].str());
-            s >> m_max_page;
+            s >> m_allocated_pages;
         }
 
         {
@@ -68,8 +67,6 @@ s3_kv_store::s3_kv_store(const std::string& host,
                 m_invalid_pages.insert(page_id);
             }
         }
-
-        m_empty = false;
     }
     catch (const curl::http_error& e) {
         if (e.code != 404) {
@@ -136,21 +133,19 @@ s3_kv_store s3_kv_store::from_params(const std::string_view& uri_view,
 }
 
 void s3_kv_store::max_page(page::id max_page) {
-    if (max_page < m_max_page) {
-        for (page::id page_id = max_page + 1;
-             page_id <= m_max_page;
-             ++page_id) {
-            m_invalid_pages.insert(page_id);
-        }
+    for (page::id page_id = max_page + 1;
+         page_id < m_allocated_pages;
+         ++page_id) {
+        m_invalid_pages.insert(page_id);
     }
 
-    m_max_page = max_page;
+    m_allocated_pages = max_page + 1;
 }
 
 void s3_kv_store::read(page::id page_id, utils::out_buffer& out) const {
     assert(out.size() == m_page_size);
 
-    if (page_id > m_max_page ||
+    if (page_id > max_page() ||
         m_invalid_pages.find(page_id) != m_invalid_pages.end()) {
         std::memset(out.data(), 0, m_page_size);
     }
@@ -186,15 +181,14 @@ void s3_kv_store::write(page::id page_id, const std::string_view& data) {
                    data,
                    m_host,
                    m_use_tls);
-    m_empty = false;
-    m_max_page = std::max(m_max_page, page_id);
+    m_allocated_pages = std::max(m_allocated_pages, page_id + 1);
     m_invalid_pages.erase(page_id);
 }
 
 void s3_kv_store::flush() {
     std::stringstream formatter;
     formatter << "page_size=" << m_page_size << '\n'
-              << "max_page=" << m_max_page << '\n'
+              << "allocated_pages" << m_allocated_pages << '\n'
               << "invalid_pages={";
     for (page::id page_id : m_invalid_pages) {
         formatter << page_id << ',';
@@ -212,8 +206,8 @@ void s3_kv_store::flush() {
                    m_host,
                    m_use_tls);
 }
+}  // namespace h5s3::s3_driver
 
 // declare storage for the static member m_class in this TU
 template<>
-H5FD_class_t s3_driver::m_class{};
-}  // namespace h5s3::s3_driver
+H5FD_class_t h5s3::s3_driver::s3_driver::m_class{};
