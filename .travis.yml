@@ -1,0 +1,83 @@
+language: cpp
+dist: trusty
+sudo: false
+
+matrix:
+  include:
+    - compiler: gcc-7
+      os: linux
+      addons:
+        apt:
+          sources:
+            - deadsnakes
+            - ubuntu-toolchain-r-test
+          packages:
+            - python3.6-dev
+            - gcc-7
+            - g++-7
+      env: GCC=7 PYTHON=python3.6
+    - compiler: gcc-7
+      os: linux
+      addons:
+        apt:
+          sources:
+            - deadsnakes
+            - ubuntu-toolchain-r-test
+          packages:
+            - python3.5-dev
+            - gcc-7
+            - g++-7
+      env: GCC=7 PYTHON=python3.5
+    - compiler: clang-5.0
+      os: linux
+      addons:
+        apt:
+          sources:
+            - deadsnakes
+            - ubuntu-toolchain-r-test
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+              key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
+          packages:
+            # we install gcc in the clang builds to get an updated libstd++
+            - gcc-7
+            - g++-7
+            - python3.6-dev
+            - clang-3.9
+      env: CLANG=5.0 PYTHON=python3.6
+    - compiler: clang-5.0
+      os: linux
+      addons:
+        apt:
+          sources:
+            - deadsnakes
+            - ubuntu-toolchain-r-test
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+              key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
+          packages:
+            # we install gcc in the clang builds to get an updated libstd++
+            - gcc-7
+            - g++-7
+            - python3.5-dev
+            - clang-3.9
+      env: CLANG=3.9 PYTHON=python3.5
+    - compiler: clang
+      os: osx
+      osx_image: xcode9.2
+      env: PYTHON_VER=3.6.4 PYTHON=python3
+    - compiler: clang
+      os: osx
+      osx_image: xcode9.2
+      env: PYTHON_VER=3.5.2 PYTHON=python3
+
+install:
+  - source etc/ci-install.sh
+
+before_script:
+  - ${CXX} --version
+  - ${PYTHON} --version
+
+script:
+  - make -j8 test
+
+notifications:
+  email: false
