@@ -221,7 +221,7 @@ PYTHON_TEST(simple_dataset, R"(
     h5s3.register()
 
     file = h5py.File(
-        f's3://{bucket}/{test_name}',
+        's3://{bucket}/{test_name}'.format(bucket=bucket, test_name=test_name),
         'w',
         driver='h5s3',
         aws_access_key=access_key,
@@ -259,7 +259,7 @@ PYTHON_TEST(simple_attribute, R"(
     h5s3.register()
 
     file = h5py.File(
-        f's3://{bucket}/{test_name}',
+        's3://{bucket}/{test_name}'.format(bucket=bucket, test_name=test_name),
         'w',
         driver='h5s3',
         aws_access_key=access_key,
@@ -287,7 +287,7 @@ PYTHON_TEST(simple_group, R"(
     h5s3.register()
 
     file = h5py.File(
-        f's3://{bucket}/{test_name}',
+        's3://{bucket}/{test_name}'.format(bucket=bucket, test_name=test_name),
         'w',
         driver='h5s3',
         aws_access_key=access_key,
