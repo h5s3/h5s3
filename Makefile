@@ -1,6 +1,8 @@
 # Put custom environment stuff here.
 -include Makefile.local
 
+PYTHON ?= python3
+
 MAJOR_VERSION := 0
 MINOR_VERSION := 0
 MICRO_VERSION := 0
@@ -76,7 +78,7 @@ TESTRUNNER := tests/run
 ALL_SOURCES := $(SOURCES) $(EXAMPLE_SOURCES) $(TEST_SOURCES)
 ALL_HEADERS := include/h5s3/**.h
 
-PYTHON_SONAME := _h5s3$(shell python-config --extension-suffix)
+PYTHON_SONAME := _h5s3$(shell $(PYTHON)-config --extension-suffix)
 PYTHON_EXTENSION := bindings/python/h5s3/$(PYTHON_SONAME)
 
 .PHONY: all
@@ -133,7 +135,7 @@ gdbtest: $(TESTRUNNER)
 
 tests/test_python.o: tests/test_python.cc .compiler_flags $(PYTHON_EXTENSION)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@ \
-		$(shell python-config --includes)
+		$(shell $(PYTHON)-config --includes)
 
 tests/%.o: tests/%.cc .compiler_flags
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@
@@ -141,7 +143,7 @@ tests/%.o: tests/%.cc .compiler_flags
 $(TESTRUNNER): gtest.a $(TEST_OBJECTS) $(SONAME)
 	$(CXX) -o $@ $(TEST_OBJECTS) gtest.a -I $(GTEST_DIR)/include \
 		-lpthread -L. -l$(LIBRARY) $(LDFLAGS) \
-		$(shell python-config --ldflags)
+		$(shell $(PYTHON)-config --ldflags)
 
 gtest.o: $(GTEST_SRCS) .compiler_flags
 	$(CXX) $(CXXFLAGS) -I $(GTEST_DIR) -I $(GTEST_DIR)/include -c \
@@ -158,14 +160,14 @@ $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	CFLAGS='$(CFLAGS)' \
 	CXXFLAGS='$(CXXFLAGS)' \
 	LDFLAGS='$(LDFLAGS)' \
-	python setup.py build_ext --inplace
+	$(PYTHON) setup.py build_ext --inplace
 
 .PHONY: tidy
 tidy:
 	$(CLANG_TIDY) $(ALL_SOURCES) $(ALL_HEADERS) --header-filter=include/ \
 		-checks=-*,clang-analyzer-*,clang-analyzer-* \
 		-- -x c++ --std=gnu++17 \
-		$(INCLUDE) $(TEST_INCLUDE) $(shell python-config --includes)
+		$(INCLUDE) $(TEST_INCLUDE) $(shell $(PYTHON)-config --includes)
 
 .PHONY: clean
 clean:
