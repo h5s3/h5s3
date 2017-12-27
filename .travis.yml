@@ -35,14 +35,14 @@ matrix:
           sources:
             - deadsnakes
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main"
               key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
           packages:
             # we install gcc in the clang builds to get an updated libstd++
             - gcc-7
             - g++-7
             - python3.6-dev
-            - clang-3.9
+            - clang-5.0
       env: CLANG=5.0 PYTHON=python3.6
     - compiler: clang-5.0
       os: linux
@@ -51,15 +51,15 @@ matrix:
           sources:
             - deadsnakes
             - ubuntu-toolchain-r-test
-            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main"
               key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
           packages:
             # we install gcc in the clang builds to get an updated libstd++
             - gcc-7
             - g++-7
             - python3.5-dev
-            - clang-3.9
-      env: CLANG=3.9 PYTHON=python3.5
+            - clang-5.0
+      env: CLANG=5.0 PYTHON=python3.5
     - compiler: clang
       os: osx
       osx_image: xcode9.2
