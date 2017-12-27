@@ -150,7 +150,7 @@ gtest.o: $(GTEST_SRCS) .compiler_flags
 gtest.a: gtest.o
 	$(AR) $(ARFLAGS) $@ $^
 
-$(PYTHON_EXTENSION): .compiler_flags
+$(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	cd bindings/python && \
 	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
 	HDF5_LIBRARY=$(HDF5_LIBRARY) \
@@ -163,7 +163,8 @@ $(PYTHON_EXTENSION): .compiler_flags
 .PHONY: tidy
 tidy:
 	$(CLANG_TIDY) $(ALL_SOURCES) $(ALL_HEADERS) --header-filter=include/ \
-		-checks=-*,clang-analyzer-*,clang-analyzer-* -- --std=gnu++17 \
+		-checks=-*,clang-analyzer-*,clang-analyzer-* \
+		-- -x c++ --std=gnu++17 \
 		$(INCLUDE) $(TEST_INCLUDE) $(shell python-config --includes)
 
 .PHONY: clean
