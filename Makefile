@@ -39,6 +39,7 @@ else
 endif
 
 ASAN_OPTIONS := symbolize=1
+LSAN_OPTIONS := suppressions=testleaks.supp
 ASAN_SYMBOLIZER_PATH ?= llvm-symbolizer
 ifeq ($(SANITIZE_ADDRESS), 1)
 	OPTLEVEL := 0
@@ -127,7 +128,7 @@ testbin/mc:
 
 .PHONY: test
 test: $(TESTRUNNER) testbin/minio testbin/mc
-	@LD_LIBRARY_PATH=. $<
+	@LD_LIBRARY_PATH=. LSAN_OPTIONS=$(LSAN_OPTIONS) $<
 
 .PHONY: gdbtest
 gdbtest: $(TESTRUNNER)
