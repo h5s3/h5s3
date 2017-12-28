@@ -2,8 +2,8 @@
 
 #include "gtest/gtest.h"
 
-#include "h5s3/s3.h"
 #include "h5s3/private/curl.h"
+#include "h5s3/s3.h"
 #include "minio.h"
 
 namespace s3 = h5s3::s3;
@@ -16,8 +16,7 @@ protected:
 
     s3::notary notary;
 
-    S3Test()
-        : notary(MINIO->region(), MINIO->access_key(), MINIO->secret_key()) {}
+    S3Test() : notary(MINIO->region(), MINIO->access_key(), MINIO->secret_key()) {}
 
     static void SetUpTestCase() {
         MINIO = std::make_unique<minio>();
@@ -33,17 +32,9 @@ std::unique_ptr<minio> S3Test::MINIO = nullptr;
 TEST_F(S3Test, set_then_get) {
     auto key = "some/key";
     for (auto content : {"content1", "content2", "content3"}) {
-        s3::set_object(notary,
-                       MINIO->bucket(),
-                       key,
-                       content,
-                       MINIO->address(),
-                       false);
-        std::string result = s3::get_object(notary,
-                                            MINIO->bucket(),
-                                            key,
-                                            MINIO->address(),
-                                            false);
+        s3::set_object(notary, MINIO->bucket(), key, content, MINIO->address(), false);
+        std::string result =
+            s3::get_object(notary, MINIO->bucket(), key, MINIO->address(), false);
         EXPECT_EQ(result, content);
     }
 }
@@ -63,12 +54,8 @@ TEST_F(S3Test, get_into) {
     std::array<char, content.size()> outbuf_memory = {0};
     h5s3::utils::out_buffer outbuf(outbuf_memory.data(), outbuf_memory.size());
 
-    std::size_t bytes_read = s3::get_object(outbuf,
-                                            notary,
-                                            MINIO->bucket(),
-                                            key,
-                                            MINIO->address(),
-                                            false);
+    std::size_t bytes_read =
+        s3::get_object(outbuf, notary, MINIO->bucket(), key, MINIO->address(), false);
     ASSERT_EQ(bytes_read, content.size());
     ASSERT_EQ(outbuf_memory, content);
 }
@@ -90,12 +77,8 @@ TEST_F(S3Test, get_less_than_full) {
     outbuf_memory.fill('Z');
     h5s3::utils::out_buffer outbuf(outbuf_memory.data(), outbuf_memory.size());
 
-    std::size_t bytes_read = s3::get_object(outbuf,
-                                            notary,
-                                            MINIO->bucket(),
-                                            key,
-                                            MINIO->address(),
-                                            false);
+    std::size_t bytes_read =
+        s3::get_object(outbuf, notary, MINIO->bucket(), key, MINIO->address(), false);
 
     // We should only get content_size bytes back.
     ASSERT_EQ(bytes_read, content.size());
@@ -129,21 +112,16 @@ TEST_F(S3Test, get_more_than_full) {
     // Outbuf not large enough to hold content.
     std::array<char, content.size() - 1> outbuf_memory;
     h5s3::utils::out_buffer outbuf(outbuf_memory.data(), outbuf_memory.size());
-    ASSERT_THROW({s3::get_object(outbuf,
-                                 notary,
-                                 MINIO->bucket(),
-                                 key,
-                                 MINIO->address(),
-                                 false); },
-                 std::out_of_range);
+    ASSERT_THROW(
+        {
+            s3::get_object(outbuf, notary, MINIO->bucket(), key, MINIO->address(), false);
+        },
+        std::out_of_range);
 }
 
 TEST_F(S3Test, get_nonexistent) {
     auto key = "some/non/existent/key";
-    EXPECT_THROW({ s3::get_object(notary,
-                                  MINIO->bucket(),
-                                  key,
-                                  MINIO->address(),
-                                  false); },
-                 h5s3::curl::http_error);
+    EXPECT_THROW(
+        { s3::get_object(notary, MINIO->bucket(), key, MINIO->address(), false); },
+        h5s3::curl::http_error);
 }

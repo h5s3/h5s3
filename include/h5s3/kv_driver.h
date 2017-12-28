@@ -3,14 +3,14 @@
 #include <limits>
 #include <type_traits>
 
-#include "H5FDpublic.h"
-#include "H5Ppublic.h"
-#include "H5Ipublic.h"
 #include "H5Epublic.h"
+#include "H5FDpublic.h"
+#include "H5Ipublic.h"
+#include "H5Ppublic.h"
 
 #include "h5s3/private/error.h"
-#include "h5s3/private/page.h"
 #include "h5s3/private/out_buffer.h"
+#include "h5s3/private/page.h"
 #include "h5s3/private/utils.h"
 
 namespace h5s3::driver {
@@ -19,10 +19,9 @@ template<typename F>
 struct inner_kv_store_params;
 
 template<typename F, typename... Args>
-struct inner_kv_store_params<F(const std::string_view&,
-                               unsigned int,
-                               std::size_t,
-                               Args...)> {
+struct inner_kv_store_params<
+    F(const std::string_view&, unsigned int, std::size_t, Args...)> {
+
     static_assert((... && std::is_pod_v<std::remove_reference_t<Args>>),
                   "Only POD types may be used in kv_store::from_params");
 
@@ -32,14 +31,13 @@ struct inner_kv_store_params<F(const std::string_view&,
         std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> extra;
 
         type(std::size_t page_size, std::size_t page_cache_size, Args... extra)
-            : page_size(page_size),
-              page_cache_size(page_cache_size),
-              extra(extra...) {}
+            : page_size(page_size), page_cache_size(page_cache_size), extra(extra...) {}
     };
 };
 
 template<typename kv_store>
-using kv_store_params = typename inner_kv_store_params<decltype(kv_store::from_params)>::type;
+using kv_store_params =
+    typename inner_kv_store_params<decltype(kv_store::from_params)>::type;
 }  // namespace detail
 
 /** Key-value driver for hdf5.
@@ -64,9 +62,7 @@ private:
     page_table m_page_table;
     haddr_t m_eoa;
 
-    kv_driver(page_table&& table)
-        : m_page_table(std::move(table)),
-          m_eoa(0) {}
+    kv_driver(page_table&& table) : m_page_table(std::move(table)), m_eoa(0) {}
 
     /** Initialize the driver's hdf5 class. This function is idempotent.
 
@@ -91,9 +87,7 @@ private:
         m_class.truncate = truncate;
 
         H5FD_mem_t fl_map[] = H5FD_FLMAP_SINGLE;
-        std::memcpy(m_class.fl_map,
-                    fl_map,
-                    sizeof(fl_map) / sizeof(H5FD_mem_t));
+        std::memcpy(m_class.fl_map, fl_map, sizeof(fl_map) / sizeof(H5FD_mem_t));
 
         return H5FDregister(&m_class);
     }
@@ -106,31 +100,26 @@ private:
                        our custom arguments.
         @return An hdf5 file or `nullptr` if an error occurred.
      */
-    static H5FD_t* open(const char* name,
-                        unsigned int flags,
-                        hid_t fapl_id,
-                        haddr_t) noexcept {
-        const params_struct* params =
-            reinterpret_cast<const params_struct*>(H5Pget_driver_info(fapl_id));
+    static H5FD_t*
+    open(const char* name, unsigned int flags, hid_t fapl_id, haddr_t) noexcept {
+        auto params = reinterpret_cast<const params_struct*>(H5Pget_driver_info(fapl_id));
 
         if (nullptr == params) {
             error::raise(__FILE__,
-                      __PRETTY_FUNCTION__,
-                      __LINE__,
-                      H5E_PLIST,
-                      H5E_BADVALUE,
-                      "bad VFL driver info");
+                         __PRETTY_FUNCTION__,
+                         __LINE__,
+                         H5E_PLIST,
+                         H5E_BADVALUE,
+                         "bad VFL driver info");
             return nullptr;
         }
 
-        auto store_params = std::tuple_cat(std::make_tuple(name,
-                                                           flags,
-                                                           params->page_size),
-                                           params->extra);
+        auto store_params =
+            std::tuple_cat(std::make_tuple(name, flags, params->page_size),
+                           params->extra);
 
         try {
-            auto store = std::apply(kv_store::from_params,
-                                       std::move(store_params));
+            auto store = std::apply(kv_store::from_params, std::move(store_params));
 
             std::size_t page_cache_size = params->page_cache_size;
             if (page_cache_size == 0) {
@@ -168,7 +157,7 @@ private:
         @return zero on success, non-zero on error.
      */
     static herr_t query(const H5FD_t*, unsigned long* flags) {
-        if(flags) {
+        if (flags) {
             *flags = 0;
             *flags |= H5FD_FEAT_AGGREGATE_METADATA;
             *flags |= H5FD_FEAT_ACCUMULATE_METADATA;
@@ -223,12 +212,8 @@ private:
         @param buf The output buffer.
         @return zero on success, non-zero on failure.
      */
-    static herr_t read(H5FD_t* file,
-            H5FD_mem_t,
-            hid_t,
-            haddr_t addr,
-            size_t size,
-            void *buf) noexcept {
+    static herr_t
+    read(H5FD_t* file, H5FD_mem_t, hid_t, haddr_t addr, size_t size, void* buf) noexcept {
         const auto& table = reinterpret_cast<kv_driver*>(file)->m_page_table;
         utils::out_buffer out{reinterpret_cast<char*>(buf), size};
         try {
@@ -260,7 +245,7 @@ private:
                         hid_t,
                         haddr_t addr,
                         size_t size,
-                        const void *buf) noexcept {
+                        const void* buf) noexcept {
         auto& table = reinterpret_cast<kv_driver*>(file)->m_page_table;
         const std::string_view view(reinterpret_cast<const char*>(buf), size);
         try {
@@ -285,10 +270,11 @@ private:
         @return zero on success, non-zero on failure.
      */
 #if H5_VERSION_GE(1, 10, 0)
-    static herr_t flush(H5FD_t* file, hid_t , hbool_t) noexcept{
+    static herr_t flush(H5FD_t* file, hid_t, hbool_t) noexcept
 #else
-    static herr_t flush(H5FD_t* file, hid_t, unsigned int) noexcept {
+    static herr_t flush(H5FD_t* file, hid_t, unsigned int) noexcept
 #endif
+    {
         try {
             reinterpret_cast<kv_driver*>(file)->m_page_table.flush();
         }

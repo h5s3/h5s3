@@ -14,7 +14,15 @@ using header = curl::header;
 using query_param = curl::query_param;
 
 enum class HTTPVerb {
-    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH,
+    GET,
+    HEAD,
+    POST,
+    PUT,
+    DELETE,
+    CONNECT,
+    OPTIONS,
+    TRACE,
+    PATCH,
 };
 
 class notary {

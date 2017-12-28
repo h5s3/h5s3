@@ -16,15 +16,23 @@ std::string now_str() {
 }
 
 const std::array<std::string, 10> HTTP_VERB_NAMES = {
-    "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH",
+    "GET",
+    "HEAD",
+    "POST",
+    "PUT",
+    "DELETE",
+    "CONNECT",
+    "OPTIONS",
+    "TRACE",
+    "PATCH",
 };
 
-template <typename E>
+template<typename E>
 constexpr inline auto to_underlying(E e) {
     return static_cast<std::underlying_type_t<E>>(e);
 }
 
-const inline std::string& canonicalize_verb(const HTTPVerb verb){
+const inline std::string& canonicalize_verb(const HTTPVerb verb) {
     return HTTP_VERB_NAMES[to_underlying(verb)];
 }
 }  // namespace detail
@@ -47,7 +55,7 @@ notary::notary(const std::string& region,
     : m_region(region),
       m_now(detail::now_str()),
       m_access_key(access_key),
-      m_signing_key(calculate_signing_key(m_now, m_region, secret_key)) {};
+      m_signing_key(calculate_signing_key(m_now, m_region, secret_key)){};
 
 // http://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html
 std::string notary::authorization_header(const HTTPVerb verb,
@@ -108,7 +116,8 @@ std::string notary::authorization_header(const HTTPVerb verb,
     // Auth Header
     std::stringstream out_formatter;
     out_formatter << "AWS4-HMAC-SHA256"
-                  << " Credential=" << m_access_key << '/' << date << '/' << m_region << "/s3/aws4_request"
+                  << " Credential=" << m_access_key << '/' << date << '/' << m_region
+                  << "/s3/aws4_request"
                   << ",SignedHeaders=" << signed_headers
                   << ",Signature=" << hash::as_string_view(signature);
     return out_formatter.str();
@@ -162,8 +171,8 @@ std::string get_object(const notary& signer,
         return session.get(url, headers);
     };
 
-    return inner_get(signer,bucket_name, path, host, use_tls, get);}
-
+    return inner_get(signer, bucket_name, path, host, use_tls, get);
+}
 
 std::size_t get_object(utils::out_buffer& out,
                        const notary& signer,
@@ -184,16 +193,14 @@ std::string set_object(const notary& signer,
                        const std::string_view& content,
                        const std::string_view& host,
                        bool use_tls) {
-
     hash::sha256_hex payload_hash = hash::sha256_hexdigest(content);
     const std::string& signing_time = signer.signing_time();
 
     std::vector<query_param> query = {};
-    std::vector<header> headers = {
-        {"host", host},
-        {"x-amz-content-sha256", hash::as_string_view(payload_hash)},
-        {"x-amz-date", signing_time}
-    };
+    std::vector<header> headers = {{"host", host},
+                                   {"x-amz-content-sha256",
+                                    hash::as_string_view(payload_hash)},
+                                   {"x-amz-date", signing_time}};
 
     std::string auth = signer.authorization_header(HTTPVerb::PUT,
                                                    bucket_name,

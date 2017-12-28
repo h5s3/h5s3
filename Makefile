@@ -12,6 +12,7 @@ HDF5_LIBRARY_PATH ?=
 HDF5_LIBRARY ?= hdf5
 
 CLANG_TIDY ?= clang-tidy
+CLANG_FORMAT ?= clang-format
 GTEST_BREAK ?= 1
 
 ifneq ($(HDF5_LIBRARY_PATH),)
@@ -168,6 +169,10 @@ tidy:
 		-checks=-*,clang-analyzer-*,clang-analyzer-* \
 		-- -x c++ --std=gnu++17 \
 		$(INCLUDE) $(TEST_INCLUDE) $(shell $(PYTHON)-config --includes)
+
+.PHONY: format
+format:
+	$(CLANG_FORMAT) -i $(ALL_SOURCES) $(ALL_HEADERS)
 
 .PHONY: clean
 clean:

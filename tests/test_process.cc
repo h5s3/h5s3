@@ -4,7 +4,6 @@
 
 using process = h5s3::testing::process;
 
-
 TEST(process, clean_exit) {
     std::vector<std::string> args = {"python", "-c", "exit(0)"};
     process::environment env = {};
@@ -26,7 +25,9 @@ TEST(process, error_exit) {
 }
 
 TEST(process, environment) {
-    std::vector<std::string> args = {"python", "-c", "import os; assert os.environ['foo'] == 'bar'"};
+    std::vector<std::string> args = {"python",
+                                     "-c",
+                                     "import os; assert os.environ['foo'] == 'bar'"};
     process::environment env = {{"foo", "bar"}};
     process proc(args, env);
 
@@ -88,5 +89,6 @@ void fail_to_clean_up_process() {
 }
 
 TEST(process, blow_up_the_world) {
-    ASSERT_DEATH(fail_to_clean_up_process(), "terminate called without an active exception");
+    ASSERT_DEATH(fail_to_clean_up_process(),
+                 "terminate called without an active exception");
 }
