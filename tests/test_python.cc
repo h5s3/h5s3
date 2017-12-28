@@ -1,5 +1,5 @@
-#include <string_view>
 #include <sstream>
+#include <string_view>
 
 #include "Python.h"
 #include "gtest/gtest.h"
@@ -57,41 +57,31 @@ protected:
         PYTHON_NAMESPACE = PyModule_GetDict(main_module.get());
         ASSERT_TRUE(PYTHON_NAMESPACE) << "failed to get module dict";
 
-        detail::scoped_ref address =                         \
-            PyUnicode_FromString(MINIO->address().data());
+        detail::scoped_ref address = PyUnicode_FromString(MINIO->address().data());
         ASSERT_TRUE(address) << "failed to allocate address object";
 
-        detail::scoped_ref access_key =                         \
-            PyUnicode_FromString(MINIO->access_key().data());
+        detail::scoped_ref access_key = PyUnicode_FromString(MINIO->access_key().data());
         ASSERT_TRUE(access_key) << "failed to allocate access_key object";
 
-        detail::scoped_ref secret_key =                         \
-            PyUnicode_FromString(MINIO->secret_key().data());
+        detail::scoped_ref secret_key = PyUnicode_FromString(MINIO->secret_key().data());
         ASSERT_TRUE(secret_key) << "failed to allocate secret_key object";
 
-        detail::scoped_ref region =                         \
-            PyUnicode_FromString(MINIO->region().data());
+        detail::scoped_ref region = PyUnicode_FromString(MINIO->region().data());
         ASSERT_TRUE(region) << "failed to allocate region object";
 
-        detail::scoped_ref bucket =                             \
-            PyUnicode_FromString(MINIO->bucket().data());
+        detail::scoped_ref bucket = PyUnicode_FromString(MINIO->bucket().data());
         ASSERT_TRUE(bucket) << "failed to allocate bucket object";
 
-        ASSERT_FALSE(PyDict_SetItemString(PYTHON_NAMESPACE.get(),
-                                          "address",
-                                          address.get()) ||
-                     PyDict_SetItemString(PYTHON_NAMESPACE.get(),
-                                          "access_key",
-                                          access_key.get()) ||
-                     PyDict_SetItemString(PYTHON_NAMESPACE.get(),
-                                          "secret_key",
-                                          secret_key.get()) ||
-                     PyDict_SetItemString(PYTHON_NAMESPACE.get(),
-                                          "region",
-                                          region.get()) ||
-                     PyDict_SetItemString(PYTHON_NAMESPACE.get(),
-                                          "bucket",
-                                          bucket.get()))
+        ASSERT_FALSE(
+            PyDict_SetItemString(PYTHON_NAMESPACE.get(), "address", address.get()) ||
+            PyDict_SetItemString(PYTHON_NAMESPACE.get(),
+                                 "access_key",
+                                 access_key.get()) ||
+            PyDict_SetItemString(PYTHON_NAMESPACE.get(),
+                                 "secret_key",
+                                 secret_key.get()) ||
+            PyDict_SetItemString(PYTHON_NAMESPACE.get(), "region", region.get()) ||
+            PyDict_SetItemString(PYTHON_NAMESPACE.get(), "bucket", bucket.get()))
             << "failed to update __main__ module dict";
     }
 
@@ -149,9 +139,8 @@ void python_test(const std::string_view& test_name,
 
     // the line number reported is the *last* line of the macro, we need to
     // subtract out the newlines from the python_source
-    std::size_t lines_in_source = std::count(python_source.begin(),
-                                             python_source.end(),
-                                             '\n');
+    std::size_t lines_in_source =
+        std::count(python_source.begin(), python_source.end(), '\n');
 
     // Add a bunch of newlines so that the errors in the tests correspond to
     // the line of the files. Subtract some lines to account for the code we
@@ -167,11 +156,9 @@ void python_test(const std::string_view& test_name,
                 << python_source << "\n"
                 << test_name << "()";
 
-    scoped_ref code_object(Py_CompileString(full_source.str().data(),
-                                            __FILE__,
-                                            Py_file_input));
-    ASSERT_TRUE(code_object.get())
-        << format_current_python_exception(buf.get());
+    scoped_ref code_object(
+        Py_CompileString(full_source.str().data(), __FILE__, Py_file_input));
+    ASSERT_TRUE(code_object.get()) << format_current_python_exception(buf.get());
 
     scoped_ref result(PyEval_EvalCode(code_object.get(),
                                       PYTHON_NAMESPACE.get(),
@@ -181,18 +168,14 @@ void python_test(const std::string_view& test_name,
 }
 }  // namespace detail
 
-
 /** Define a test case for the Python bindings.
 
     @param name The name of the test case.
     @param python_source The body of the test as a string of Python source code.
  */
-#define PYTHON_TEST(name, python_source)                                \
-    TEST_F(PythonTest, name) {                                          \
-        ::detail::python_test(#name,                                    \
-                              __LINE__,                                 \
-                              PYTHON_NAMESPACE,                         \
-                              python_source);                           \
+#define PYTHON_TEST(name, python_source)                                                 \
+    TEST_F(PythonTest, name) {                                                           \
+        ::detail::python_test(#name, __LINE__, PYTHON_NAMESPACE, python_source);         \
     }
 
 PYTHON_TEST(register_and_unregister, R"(
@@ -210,7 +193,6 @@ PYTHON_TEST(register_and_unregister, R"(
     h5s3.unregister()
     assert 'h5s3' not in h5py.registered_drivers(), h5py.registered_drivers()
 )")
-
 
 PYTHON_TEST(simple_dataset, R"(
     import h5py

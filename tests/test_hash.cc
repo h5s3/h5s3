@@ -3,13 +3,14 @@
 #include "h5s3/private/hash.h"
 
 template<typename Char, Char... cs>
-constexpr std::array<unsigned char, sizeof...(cs)> operator ""_arr() {
-    return { static_cast<unsigned char>(cs)... };
+constexpr std::array<unsigned char, sizeof...(cs)> operator""_arr() {
+    return {static_cast<unsigned char>(cs)...};
 }
 
 TEST(hash, sha256) {
     auto result = h5s3::hash::sha256_hexdigest("foobar");
-    auto expected = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"_arr;
+    auto expected =
+        "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"_arr;
     EXPECT_EQ(result, expected);
 
     result = h5s3::hash::sha256_hexdigest("");
@@ -17,7 +18,7 @@ TEST(hash, sha256) {
     EXPECT_EQ(result, expected);
 
     std::string big;
-    for (int i = 0; i < 10000; ++i){
+    for (int i = 0; i < 10000; ++i) {
         big.append("ayy");
     }
     result = h5s3::hash::sha256_hexdigest(big);
@@ -27,7 +28,8 @@ TEST(hash, sha256) {
 
 TEST(hash, hmac) {
     auto result = h5s3::hash::hmac_sha256_hexdigest("password", "foobar");
-    auto expected = "eb0167a1ebf205510baff5da1465537944225f0e0140e1880b746f361ff11dca"_arr;
+    auto expected =
+        "eb0167a1ebf205510baff5da1465537944225f0e0140e1880b746f361ff11dca"_arr;
     EXPECT_EQ(result, expected);
 
     result = h5s3::hash::hmac_sha256_hexdigest("password2", "");
@@ -35,7 +37,7 @@ TEST(hash, hmac) {
     EXPECT_EQ(result, expected);
 
     std::string big;
-    for (int i = 0; i < 10000; ++i){
+    for (int i = 0; i < 10000; ++i) {
         big.append("ayy");
     }
     result = h5s3::hash::hmac_sha256_hexdigest("password", big);

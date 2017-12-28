@@ -23,11 +23,8 @@ s3_kv_store::s3_kv_store(const std::string& host,
       m_page_size(page_size) {
 
     try {
-        std::string result = s3::get_object(m_notary,
-                                            m_bucket,
-                                            path + "/.meta",
-                                            m_host,
-                                            m_use_tls);
+        std::string result =
+            s3::get_object(m_notary, m_bucket, path + "/.meta", m_host, m_use_tls);
 
         std::regex metadata_regex("page_size=([0-9]+)\n"
                                   "allocated_pages=([0-9]+)\n"
@@ -36,8 +33,7 @@ s3_kv_store::s3_kv_store(const std::string& host,
 
         if (!std::regex_match(result, match, metadata_regex)) {
             std::stringstream s;
-            s << "failed to parse metadata from .meta file:\n"
-              << result;
+            s << "failed to parse metadata from .meta file:\n" << result;
             throw std::runtime_error(s.str());
         }
 
@@ -47,8 +43,8 @@ s3_kv_store::s3_kv_store(const std::string& host,
             s >> metadata_page_size;
             if (m_page_size != 0 && metadata_page_size != m_page_size) {
                 std::stringstream s;
-                s << "passed page size does not match existing page size: "
-                  << m_page_size << " != " << metadata_page_size;
+                s << "passed page size does not match existing page size: " << m_page_size
+                  << " != " << metadata_page_size;
                 throw std::runtime_error(s.str());
             }
 
@@ -123,19 +119,11 @@ s3_kv_store s3_kv_store::from_params(const std::string_view& uri_view,
     else {
         host_string = host;
     }
-    return {host,
-            use_tls,
-            bucket,
-            path,
-            access_key,
-            secret_key,
-            region,page_size};
+    return {host, use_tls, bucket, path, access_key, secret_key, region, page_size};
 }
 
 void s3_kv_store::max_page(page::id max_page) {
-    for (page::id page_id = max_page + 1;
-         page_id < m_allocated_pages;
-         ++page_id) {
+    for (page::id page_id = max_page + 1; page_id < m_allocated_pages; ++page_id) {
         m_invalid_pages.insert(page_id);
     }
 
@@ -145,19 +133,14 @@ void s3_kv_store::max_page(page::id max_page) {
 void s3_kv_store::read(page::id page_id, utils::out_buffer& out) const {
     assert(out.size() == m_page_size);
 
-    if (page_id > max_page() ||
-        m_invalid_pages.find(page_id) != m_invalid_pages.end()) {
+    if (page_id > max_page() || m_invalid_pages.find(page_id) != m_invalid_pages.end()) {
         std::memset(out.data(), 0, m_page_size);
     }
 
     std::string keyname(m_path + "/" + std::to_string(page_id));
     try {
-        std::size_t size = s3::get_object(out,
-                                          m_notary,
-                                          m_bucket,
-                                          keyname,
-                                          m_host,
-                                          m_use_tls);
+        std::size_t size =
+            s3::get_object(out, m_notary, m_bucket, keyname, m_host, m_use_tls);
         if (size != m_page_size) {
             throw std::runtime_error("page was smaller than the page_size");
         }
@@ -175,12 +158,7 @@ void s3_kv_store::read(page::id page_id, utils::out_buffer& out) const {
 
 void s3_kv_store::write(page::id page_id, const std::string_view& data) {
     std::string keyname(m_path + "/" + std::to_string(page_id));
-    s3::set_object(m_notary,
-                   m_bucket,
-                   keyname,
-                   data,
-                   m_host,
-                   m_use_tls);
+    s3::set_object(m_notary, m_bucket, keyname, data, m_host, m_use_tls);
     m_allocated_pages = std::max(m_allocated_pages, page_id + 1);
     m_invalid_pages.erase(page_id);
 }

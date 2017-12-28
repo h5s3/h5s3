@@ -6,6 +6,7 @@
                             "../submodules/googletest/googletest/include"
                             "../../../include"
                             "/usr/include/python3.6m")))
+            (eval . (set-fill-column 90))
             (eval . (c-set-offset 'innamespace 0))))
  (c++-mode . ((eval . (setq flycheck-gcc-include-path
                             '("../"
@@ -15,4 +16,5 @@
                               "../../../include"
                               "/usr/include/python3.6m")))
               (eval . (c-set-offset 'innamespace 0))
+              (eval . (set-fill-column 90))
               (flycheck-gcc-language-standard . "gnu++17"))))
