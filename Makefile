@@ -21,9 +21,18 @@ else
 	EXTRA_LDFLAGS :=
 endif
 
+# Set this to 1 if you want to build with gcov support
+COVERAGE ?= 0
+ifneq ($(COVERAGE),0)
+	EXTRA_CXXFLAGS := -fprofile-arcs -ftest-coverage
+	EXTRA_LDFLAGS := $(EXTRA_LDFLAGS) -fprofile-arcs -lgcov
+else
+	EXTRA_CXXFLAGS :=
+endif
+
 OPTLEVEL ?= 3
 # This uses = instead of := so that you we can conditionally change OPTLEVEL below.
-CXXFLAGS = -std=gnu++17 -Wall -Wextra -g -O$(OPTLEVEL)
+CXXFLAGS = -std=gnu++17 -Wall -Wextra -g -O$(OPTLEVEL) $(EXTRA_CXXFLAGS)
 LDFLAGS := $(EXTRA_LDFLAGS) -lcurl -lcrypto -lstdc++fs -l$(HDF5_LIBRARY)
 INCLUDE_DIRS := include/ $(HDF5_INCLUDE_PATH)
 INCLUDE := $(foreach d,$(INCLUDE_DIRS), -I$d)
@@ -174,6 +183,15 @@ tidy:
 .PHONY: format
 format:
 	$(CLANG_FORMAT) -i $(ALL_SOURCES) $(ALL_HEADERS)
+
+.PHONY: coverage
+coverage:
+	@COVERAGE=1 $(MAKE) __real-coverage
+
+
+.PHONY: __real-coverage
+__real-coverage: test
+	@./etc/coverage-report src/ include/h5s3/ tests/
 
 .PHONY: clean
 clean:

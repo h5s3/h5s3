@@ -71,7 +71,7 @@ before_script:
   - ${PYTHON} --version
 
 script:
-  - make -j8 test
+  - make -j8 $(if [ -z "$GCC" ];then echo test;else echo coverage;fi)
 
 notifications:
   email: false

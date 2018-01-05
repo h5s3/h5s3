@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+import operator as op
+import os
+import re
+import shutil
+import subprocess
+
+
+class GCOVReport:
+    ext_suffixes = '.c', '.cc', '.h'
+
+    def __init__(self, roots, ignore):
+        self.roots = roots
+        self._ignore = (
+            re.compile(ignore).match
+            if ignore is not None else
+            lambda _: None
+        )
+
+    def _source_paths(self):
+        for root in self.roots:
+            for base, _, filenames in os.walk(root):
+                for filename in filenames:
+                    full_path = os.path.join(base, filename)
+                    if self._ignore(full_path):
+                        continue
+
+                    if not full_path.endswith(self.ext_suffixes):
+                        continue
+
+                    yield full_path
+
+    @property
+    def _term_width(self):
+        return shutil.get_terminal_size((80, 20)).columns
+
+    @property
+    def _horizontal_line(self):
+        return '-' * self._term_width
+
+    def _gcov_data(self, filename):
+        result = subprocess.run(
+            [os.environ.get('GCOV', 'gcov'), filename],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        result.check_returncode()
+        with open(os.path.basename(filename) + '.gcov') as f:
+            statements = 0
+            missed_lines = []
+            for line in f:
+                exc_count, line_number, source = map(
+                    str.strip,
+                    line.split(':', 2),
+                )
+
+                if exc_count != '-':
+                    statements += 1
+                if exc_count in {'#####', '====='}:
+                    missed_lines.append(int(line_number))
+
+        return statements, missed_lines
+
+    def _format_missed_lines(self, lines):
+        if not lines:
+            return ''
+
+        it = iter(lines)
+        head = next(it)
+        range_ = [head, head]
+        formatted = []
+
+        def fmt_range():
+            if range_[0] == range_[1]:
+                return str(range_[0])
+
+            return '%s-%s' % tuple(range_)
+
+        for line in it:
+            if line == range_[1] + 1:
+                range_[1] = line
+            else:
+                formatted.append(fmt_range())
+                range_ = [line, line]
+
+        formatted.append(fmt_range())
+        return ', '.join(formatted)
+
+    def summary(self):
+        print(self._horizontal_line)
+        print('Coverage Report')
+        print(self._horizontal_line)
+
+        source_col = ['Name']
+        statements_col = ['Stmts']
+        miss_col = ['Miss']
+        cover_col = ['Cover']
+        missing_col = ['Missing']
+
+        total_statements = total_missed = 0
+        for source in self._source_paths():
+            source_col.append(source)
+
+            try:
+                statements, missed_lines = self._gcov_data(source)
+            except OSError:
+                statements_col.append('--')
+                cover_col.append('--')
+                miss_col.append('--')
+                missing_col.append('--')
+            else:
+                total_statements += statements
+
+                missing = len(missed_lines)
+                total_missed += missing
+
+                statements_col.append(str(statements))
+                cover_col.append('%.0f%%' % (
+                    (statements - missing) / statements * 100
+                ))
+                miss_col.append(str(missing))
+                missing_col.append(self._format_missed_lines(missed_lines))
+
+        len_source = max(map(len, source_col))
+        len_statements = max(map(len, statements_col))
+        len_miss = max(map(len, miss_col))
+        len_cover = max(map(len, cover_col))
+
+        line_fmt = (
+            '{source:<{len_source}}'
+            '   {statements:>{len_statements}}'
+            '   {miss:>{len_miss}}'
+            '  {cover:>{len_cover}}'  # pytest has one less space here
+            '   {missing}'
+        )
+
+        def write_line(source, statements, miss, cover, missing):
+            print(
+                line_fmt.format(
+                    source=source,
+                    len_source=len_source,
+                    statements=statements,
+                    len_statements=len_statements,
+                    miss=miss,
+                    len_miss=len_miss,
+                    cover=cover,
+                    len_cover=len_cover,
+                    missing=missing,
+                ),
+            )
+
+        table = zip(
+            source_col,
+            statements_col,
+            miss_col,
+            cover_col,
+            missing_col,
+        )
+        write_line(*next(table))
+
+        print(self._horizontal_line)
+        for row in sorted(list(table), key=op.itemgetter(0)):
+            write_line(*row)
+
+        print(self._horizontal_line)
+
+        try:
+            cover_float = (total_statements - total_missed) / total_statements
+        except ZeroDivisionError:
+            cover_float = float('nan')
+
+        write_line(
+            'TOTAL',
+            total_statements,
+            total_missed,
+            '%.0f%%' % (cover_float * 100),
+            '',
+        )
+
+        for entry in os.scandir('.'):
+            if entry.name.endswith('.gcov'):
+                os.remove(entry.path)
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Generate a coverage report.')
+    parser.add_argument(
+        'root',
+        metavar='PATH',
+        type=str,
+        help='The root paths to search for .gdna files in.',
+        default='.',
+        nargs='+',
+    )
+    parser.add_argument(
+        '-i',
+        '--ignore',
+        metavar='REGEX',
+        type=str,
+        help='A regex of file paths to ignore.',
+        default=None,
+    )
+    args = parser.parse_args()
+    GCOVReport(args.root, args.ignore).summary()
+
+
+if __name__ == '__main__':
+    main()
