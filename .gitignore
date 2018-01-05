@@ -24,6 +24,11 @@ a.out
 # gcc header dependencies
 *.d
 
+# coverage artifacts
+*.gcov
+*.gcno
+*.gcda
+
 # etags
 TAGS
 
