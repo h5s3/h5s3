@@ -69,6 +69,7 @@ endif
 SOURCES := $(wildcard src/*.cc)
 OBJECTS := $(SOURCES:.cc=.o)
 DFILES :=  $(SOURCES:.cc=.d)
+COVERAGE_FILES := $(SOURCES:.cc=.gcda) $(SOURCES:.cc=gcno)
 
 EXAMPLE_SOURCES := $(wildcard examples/*.cc)
 EXAMPLE_OBJECTS := $(EXAMPLE_SOURCES:.cc=.o)
@@ -85,9 +86,21 @@ GTEST_SRCS := $(wildcard $(GTEST_DIR)/src/*.cc) \
 TEST_SOURCES := $(wildcard tests/*.cc)
 TEST_DFILES := $(TEST_SOURCES:.cc=.d)
 TEST_OBJECTS := $(TEST_SOURCES:.cc=.o)
-TEST_HEADERS := $(wildcard tests/*.h)  $(GTEST_HEADERS)
+TEST_HEADERS := $(wildcard tests/*.h) $(GTEST_HEADERS)
 TEST_INCLUDE := -I tests -I $(GTEST_DIR)/include
 TESTRUNNER := tests/run
+
+GBENCHMARK_DIR := submodules/benchmark
+GBENCHMARK_HEADERS := $(wildcard $(GBENCHMARK_DIR)/src/*.h)
+GBENCHMARK_SRCS := $(wildcard $(GBENCHMARK_DIR)/src/*.cc)
+LIBGBENCHMARK := $(GBENCHMARK_DIR)/build/src/libbenchmark.a
+
+BENCH_SOURCES := $(wildcard bench/*.cc)
+BENCH_DFILES := $(BENCH_SOURCES:.cc=.d)
+BENCH_OBJECTS := $(BENCH_SOURCES:.cc=.o)
+BENCH_HEADERS := $(wildcard bench/*.h)  $(GBENCHMARK_HEADERS)
+BENCH_INCLUDE := -I bench -I $(GBENCHMARK_DIR)/include
+BENCHRUNNER := bench/run
 
 ALL_SOURCES := $(SOURCES) $(EXAMPLE_SOURCES) $(TEST_SOURCES)
 ALL_HEADERS := include/h5s3/**.h
@@ -157,7 +170,7 @@ tests/%.o: tests/%.cc .compiler_flags
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(TEST_INCLUDE) -MD -fPIC -c $< -o $@
 
 $(TESTRUNNER): gtest.a $(TEST_OBJECTS) $(SONAME)
-	$(CXX) -o $@ $(TEST_OBJECTS) gtest.a -I $(GTEST_DIR)/include \
+	$(CXX) -o $@ $(TEST_OBJECTS) gtest.a $(TEST_INCLUDE) \
 		-lpthread -L. -l$(LIBRARY) $(LDFLAGS) \
 		$(shell $(PYTHON)-config --ldflags)
 
@@ -167,6 +180,26 @@ gtest.o: $(GTEST_SRCS) .compiler_flags
 
 gtest.a: gtest.o
 	$(AR) $(ARFLAGS) $@ $^
+
+
+.PHONY: benchmark
+benchmark: $(BENCHRUNNER) testbin/minio testbin/mc
+	@LD_LIBRARY_PATH=. $<
+
+bench/%.o: bench/%.cc .compiler_flags
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(BENCH_INCLUDE) -MD -fPIC -c $< -o $@
+
+
+$(LIBGBENCHMARK): $(GBENCHMARK_SRCS) $(GBENCHMARK_HEADERS)
+	cd $(GBENCHMARK_DIR) && mkdir -p build
+	cd $(GBENCHMARK_DIR)/build && cmake .. \
+		-DCMAKE_BUILD_TYPE=RELEASE \
+		-DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+	make -C $(GBENCHMARK_DIR)/build
+
+$(BENCHRUNNER): $(LIBGBENCHMARK) $(BENCH_OBJECTS) $(SONAME)
+	$(CXX) -o $@ $(BENCH_OBJECTS) $(BENCH_LDFLAGS) $(BENCH_INCLUDE) \
+		$(LIBGBENCHMARK) -lpthread -L. -l$(LIBRARY) $(LDFLAGS)
 
 $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	cd bindings/python && \
@@ -188,7 +221,7 @@ tidy:
 
 .PHONY: format
 format:
-	$(CLANG_FORMAT) -i $(ALL_SOURCES) $(ALL_HEADERS)
+	@$(CLANG_FORMAT) -i $(ALL_SOURCES) $(ALL_HEADERS)
 
 .PHONY: coverage
 coverage:
@@ -204,9 +237,11 @@ clean:
 	@rm -f $(SONAME) $(SHORT_SONAME) $(OBJECTS) $(DFILES) \
 		$(EXAMPLES) $(EXAMPLE_OBJECTS) $(EXAMPLE_DFILES) \
 		$(TESTRUNNER) $(TEST_OBJECTS) $(TEST_DFILES) \
-		gtest.o gtest.a \
-		$(PYTHON_EXTENSION) \
-		-r bindings/python/build
+		gtest.o gtest.a gtest.gcda gtest.gcno \
+		$(BENCHRUNNER) $(BENCH_OBJECTS) $(BENCH_DFILES) \
+		$(COVERAGE_FILES) \
+		-r bindings/python/build $(PYTHON_EXTENSION) \
+	@make -C $(GBENCHMARK_DIR)/build clean > /dev/null
 
 -include $(DFILES) $(TEST_DFILES)
 

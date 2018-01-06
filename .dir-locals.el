@@ -3,8 +3,9 @@
                           '("../"
                             "../include"
                             "../../include"
-                            "../submodules/googletest/googletest/include"
                             "../../../include"
+                            "../submodules/googletest/googletest/include"
+                            "../submodules/benchmark/include"
                             "/usr/include/python3.6m")))
             (eval . (set-fill-column 90))
             (eval . (c-set-offset 'innamespace 0))))
@@ -12,8 +13,9 @@
                             '("../"
                               "../include"
                               "../../include"
-                              "../submodules/googletest/googletest/include"
                               "../../../include"
+                              "../submodules/googletest/googletest/include"
+                              "../submodules/benchmark/include"
                               "/usr/include/python3.6m")))
               (eval . (c-set-offset 'innamespace 0))
               (eval . (set-fill-column 90))

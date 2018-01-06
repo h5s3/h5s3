@@ -73,13 +73,13 @@ std::string notary::authorization_header(const HTTPVerb verb,
     canonical_request_formatter << '/' << bucket_name << '/' << path << '\n';
 
     // Query Params
-    for (const auto& [key, value] : query) {
+    for (const auto & [ key, value ] : query) {
         canonical_request_formatter << key << '=' << value;
     }
     canonical_request_formatter << '\n';
 
     // Headers
-    for (const auto& [key, value] : headers) {
+    for (const auto & [ key, value ] : headers) {
         canonical_request_formatter << key << ':' << value << '\n';
     }
     canonical_request_formatter << '\n';
