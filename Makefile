@@ -15,31 +15,16 @@ CLANG_TIDY ?= clang-tidy
 CLANG_FORMAT ?= clang-format
 GTEST_BREAK ?= 1
 
-ifneq ($(HDF5_LIBRARY_PATH),)
-	EXTRA_LDFLAGS := -L$(HDF5_LIBRARY_PATH)
-else
-	EXTRA_LDFLAGS :=
-endif
-
-GCOV ?= gcov
-# Set this to 1 if you want to build with gcov support
-COVERAGE ?= 0
-ifneq ($(COVERAGE),0)
-	EXTRA_CXXFLAGS := -fprofile-arcs -ftest-coverage
-	EXTRA_LDFLAGS := $(EXTRA_LDFLAGS) -fprofile-arcs -lgcov
-else
-	EXTRA_CXXFLAGS :=
-endif
-
 OPTLEVEL ?= 3
 # This uses = instead of := so that you we can conditionally change OPTLEVEL below.
-CXXFLAGS = -std=gnu++17 -Wall -Wextra -g -O$(OPTLEVEL) $(EXTRA_CXXFLAGS)
-LDFLAGS := $(EXTRA_LDFLAGS) -lcurl -lcrypto -lstdc++fs -l$(HDF5_LIBRARY)
+CXXFLAGS = -std=gnu++17 -Wall -Wextra -g -O$(OPTLEVEL)
+LDFLAGS := -lcurl -lcrypto -lstdc++fs -l$(HDF5_LIBRARY)
 INCLUDE_DIRS := include/ $(HDF5_INCLUDE_PATH)
 INCLUDE := $(foreach d,$(INCLUDE_DIRS), -I$d)
 LIBRARY := h5s3
 SHORT_SONAME := lib$(LIBRARY).so
 SONAME := $(SHORT_SONAME).$(MAJOR_VERSION).$(MINOR_VERSION).$(MICRO_VERSION)
+
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
 	SONAME_FLAG := install_name
@@ -49,19 +34,36 @@ else
 	SONAME_FLAG := soname
 endif
 
+ifneq ($(HDF5_LIBRARY_PATH),)
+	LDFLAGS += -L$(HDF5_LIBRARY_PATH)
+endif
+
+# Sanitizers
 ASAN_OPTIONS := symbolize=1
 LSAN_OPTIONS := suppressions=testleaks.supp
 ASAN_SYMBOLIZER_PATH ?= llvm-symbolizer
-ifeq ($(SANITIZE_ADDRESS), 1)
+
+SANITIZE_ADDRESS ?= 0
+ifneq ($(SANITIZE_ADDRESS),0)
 	OPTLEVEL := 0
 	CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer -static-libasan
 	LDFLAGS += -fsanitize=address -static-libasan
 endif
 
-ifeq ($(SANITIZE_UNDEFINED), 1)
+SANITIZE_UNDEFINED ?= 0
+ifneq ($(SANITIZE_UNDEFINED),0)
 	OPTLEVEL := 0
 	CXXFLAGS += -fsanitize=undefined
 	LDFLAGS += -lubsan
+endif
+
+# Coverage
+GCOV := gcov-7
+# Set this to 1 if you want to build with gcov support
+COVERAGE ?= 0
+ifneq ($(COVERAGE),0)
+	CXXFLAGS += -fprofile-arcs -ftest-coverage
+	LDFLAGS += -fprofile-arcs -lgcov
 endif
 
 SOURCES := $(wildcard src/*.cc)
