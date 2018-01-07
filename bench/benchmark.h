@@ -11,4 +11,4 @@
 #define INNER_CAT(a, b) a ## b
 #define CAT(a, b) INNER_CAT(a, b)
 
-#define ITERATE(state) for (auto UNUSED(CAT(_unused, __LINE__)) : state)
+#define BENCHMARK_LOOP(state) for (auto UNUSED(CAT(_unused, __LINE__)) : state)

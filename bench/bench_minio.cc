@@ -10,7 +10,7 @@ protected:
 h5s3::utils::minio minio_fixture::m_minio;
 
 BENCHMARK_F(minio_fixture, create_new_file)(benchmark::State& state) {
-    ITERATE(state) {
+    BENCHMARK_LOOP(state) {
         // fill this in when hdfgroup.org is back online
     }
 }
