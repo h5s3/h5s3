@@ -21,6 +21,7 @@ else
 	EXTRA_LDFLAGS :=
 endif
 
+GCOV ?= gcov
 # Set this to 1 if you want to build with gcov support
 COVERAGE ?= 0
 ifneq ($(COVERAGE),0)
@@ -92,6 +93,8 @@ ALL_HEADERS := include/h5s3/**.h
 PYTHON_SONAME := _h5s3$(shell $(PYTHON)-config --extension-suffix)
 PYTHON_EXTENSION := bindings/python/h5s3/$(PYTHON_SONAME)
 
+ALL_FLAGS := 'CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS)'
+
 .PHONY: all
 all: $(SONAME)
 
@@ -105,7 +108,7 @@ local-install: $(SONAME)
 # Write our current compiler flags so that we rebuild if they change.
 force:
 .compiler_flags: force
-	@echo '$(CXXFLAGS)' | cmp -s - $@ || echo '$(CXXFLAGS)' > $@
+	@echo '$(ALL_FLAGS)' | cmp -s - $@ || echo '$(ALL_FLAGS)' > $@
 
 $(SONAME): $(OBJECTS) $(HEADERS)
 	$(CXX) $(OBJECTS) -shared -Wl,-$(SONAME_FLAG),$(SONAME) \
@@ -168,6 +171,7 @@ $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
 	HDF5_LIBRARY=$(HDF5_LIBRARY) \
 	CC=$(CC) \
+	CXX=$(CXX) \
 	CFLAGS='$(CFLAGS)' \
 	CXXFLAGS='$(CXXFLAGS)' \
 	LDFLAGS='$(LDFLAGS)' \
@@ -191,7 +195,7 @@ coverage:
 
 .PHONY: __real-coverage
 __real-coverage: test
-	@./etc/coverage-report src/ include/h5s3/ tests/
+	@GCOV=$(GCOV) ./etc/coverage-report src/ include/h5s3/ tests/
 
 .PHONY: clean
 clean:
@@ -199,6 +203,7 @@ clean:
 		$(EXAMPLES) $(EXAMPLE_OBJECTS) $(EXAMPLE_DFILES) \
 		$(TESTRUNNER) $(TEST_OBJECTS) $(TEST_DFILES) \
 		gtest.o gtest.a \
+		$(PYTHON_EXTENSION) \
 		-r bindings/python/build
 
 -include $(DFILES) $(TEST_DFILES)
