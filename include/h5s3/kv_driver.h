@@ -9,9 +9,9 @@
 #include "H5Ppublic.h"
 
 #include "h5s3/private/error.h"
+#include "h5s3/private/literals.h"
 #include "h5s3/private/out_buffer.h"
 #include "h5s3/private/page.h"
-#include "h5s3/private/utils.h"
 
 namespace h5s3::driver {
 namespace detail {
@@ -190,11 +190,11 @@ private:
         return 0;
     }
 
-    /** Get the end of file address.
+        /** Get the end of file address.
 
-        @param file The file to get the eof on.
-        @return The end of file address.
-    */
+            @param file The file to get the eof on.
+            @return The end of file address.
+        */
 #if H5_VERSION_GE(1, 10, 0)
     static haddr_t get_eof(const H5FD_t* file, H5FD_mem_t) noexcept {
 #else
@@ -264,11 +264,11 @@ private:
         return 0;
     }
 
-    /** Flush data to an hdf5 file.
+        /** Flush data to an hdf5 file.
 
-        @param file The file to flush.
-        @return zero on success, non-zero on failure.
-     */
+            @param file The file to flush.
+            @return zero on success, non-zero on failure.
+         */
 #if H5_VERSION_GE(1, 10, 0)
     static herr_t flush(H5FD_t* file, hid_t, hbool_t) noexcept
 #else

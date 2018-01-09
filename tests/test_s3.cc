@@ -2,24 +2,22 @@
 
 #include "gtest/gtest.h"
 
+#include "h5s3/minio.h"
 #include "h5s3/private/curl.h"
 #include "h5s3/s3.h"
-#include "minio.h"
 
 namespace s3 = h5s3::s3;
 
-using process = h5s3::testing::process;
-
 class S3Test : public ::testing::Test {
 protected:
-    static std::unique_ptr<minio> MINIO;
+    static std::unique_ptr<h5s3::utils::minio> MINIO;
 
     s3::notary notary;
 
     S3Test() : notary(MINIO->region(), MINIO->access_key(), MINIO->secret_key()) {}
 
     static void SetUpTestCase() {
-        MINIO = std::make_unique<minio>();
+        MINIO = std::make_unique<h5s3::utils::minio>();
     }
 
     static void TearDownTestCase() {
@@ -27,7 +25,7 @@ protected:
     }
 };
 
-std::unique_ptr<minio> S3Test::MINIO = nullptr;
+std::unique_ptr<h5s3::utils::minio> S3Test::MINIO = nullptr;
 
 TEST_F(S3Test, set_then_get) {
     auto key = "some/key";

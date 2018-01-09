@@ -32,7 +32,7 @@ matrix:
             - g++-7
             - libhdf5-serial-dev
       env: GCC=7 PYTHON=python3.5
-    - compiler: clang-5
+    - compiler: clang-5.0
       os: linux
       addons:
         apt:
@@ -47,7 +47,7 @@ matrix:
             - python3.6-venv
             - libhdf5-serial-dev
       env: CLANG=5.0 PYTHON=python3.6 PATH=/usr/local/clang-5.0.0/bin:$PATH
-    - compiler: clang-5
+    - compiler: clang-5.0
       os: linux
       addons:
         apt:

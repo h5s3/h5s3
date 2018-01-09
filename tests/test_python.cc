@@ -4,7 +4,7 @@
 #include "Python.h"
 #include "gtest/gtest.h"
 
-#include "minio.h"
+#include "h5s3/minio.h"
 
 namespace detail {
 /** A `PyObject*` which calls `Py_XDECREF` when it falls out of scope.
@@ -41,11 +41,11 @@ public:
 
 class PythonTest : public ::testing::Test {
 protected:
-    static std::unique_ptr<minio> MINIO;
+    static std::unique_ptr<h5s3::utils::minio> MINIO;
     static detail::scoped_ref PYTHON_NAMESPACE;
 
     static void SetUpTestCase() {
-        MINIO = std::make_unique<minio>();
+        MINIO = std::make_unique<h5s3::utils::minio>();
 
         // initialize the Python interpreter state
         Py_Initialize();
@@ -94,7 +94,7 @@ protected:
 };
 
 detail::scoped_ref PythonTest::PYTHON_NAMESPACE = nullptr;
-std::unique_ptr<minio> PythonTest::MINIO = nullptr;
+std::unique_ptr<h5s3::utils::minio> PythonTest::MINIO = nullptr;
 
 namespace detail {
 /** An RAII object which clears the Python exception state when it goes out of

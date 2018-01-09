@@ -6,6 +6,7 @@
 
 # test runner built with `make test`
 tests/run
+bench/run
 
 # doc artifacts
 html/*
