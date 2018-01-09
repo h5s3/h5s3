@@ -3,13 +3,11 @@
 #include <algorithm>
 #include <cerrno>
 
-#include "h5s3/private/utils.h"
-
+#include "h5s3/private/literals.h"
 #include "h5s3/private/process.h"
+#include "h5s3/private/tmpdir.h"
 
 namespace h5s3::utils {
-namespace fs = std::experimental::filesystem;
-
 class minio final {
 private:
     std::string m_access_key;
@@ -18,11 +16,7 @@ private:
     std::string m_minio_address;
     std::string m_region;
     std::unique_ptr<process> m_minio_proc;
-    fs::path m_minio_root;
-
-    /** Create a new, unique, temporary directory.
-     */
-    static fs::path temp_directory();
+    tmpdir m_minio_root;
 
 public:
     minio(const std::string_view& access_key = "TESTINGACCESSKEYXXXX",

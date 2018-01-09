@@ -19,6 +19,22 @@ OPTLEVEL ?= 3
 # This uses = instead of := so that you we can conditionally change OPTLEVEL below.
 CXXFLAGS = -std=gnu++17 -Wall -Wextra -g -O$(OPTLEVEL)
 LDFLAGS := -lcurl -lcrypto -lstdc++fs -l$(HDF5_LIBRARY)
+
+ifneq ($(HDF5_LIBRARY_PATH),)
+	EXTRA_LDFLAGS := -L$(HDF5_LIBRARY_PATH)
+else
+	EXTRA_LDFLAGS :=
+endif
+
+# Set this to 1 if you want to build with gcov support
+COVERAGE ?= 0
+ifneq ($(COVERAGE),0)
+	EXTRA_CXXFLAGS := -fprofile-arcs -ftest-coverage
+	EXTRA_LDFLAGS := $(EXTRA_LDFLAGS) -fprofile-arcs -lgcov
+else
+	EXTRA_CXXFLAGS :=
+endif
+
 INCLUDE_DIRS := include/ $(HDF5_INCLUDE_PATH)
 INCLUDE := $(foreach d,$(INCLUDE_DIRS), -I$d)
 LIBRARY := h5s3
@@ -240,7 +256,7 @@ clean:
 		gtest.o gtest.a gtest.gcda gtest.gcno \
 		$(BENCHRUNNER) $(BENCH_OBJECTS) $(BENCH_DFILES) \
 		$(COVERAGE_FILES) \
-		-r bindings/python/build $(PYTHON_EXTENSION) \
+		-r bindings/python/build $(PYTHON_EXTENSION)
 	@make -C $(GBENCHMARK_DIR)/build clean > /dev/null
 
 -include $(DFILES) $(TEST_DFILES)

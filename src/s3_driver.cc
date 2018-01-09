@@ -166,7 +166,7 @@ void s3_kv_store::write(page::id page_id, const std::string_view& data) {
 void s3_kv_store::flush() {
     std::stringstream formatter;
     formatter << "page_size=" << m_page_size << '\n'
-              << "allocated_pages" << m_allocated_pages << '\n'
+              << "allocated_pages=" << m_allocated_pages << '\n'
               << "invalid_pages={";
     for (page::id page_id : m_invalid_pages) {
         formatter << page_id << ',';

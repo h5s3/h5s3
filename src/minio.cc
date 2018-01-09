@@ -4,36 +4,6 @@
 #include "h5s3/minio.h"
 
 namespace h5s3::utils {
-
-fs::path minio::temp_directory() {
-    auto random_char = []() {
-        auto options = "abcdefghijklmnopqrstuvwxyz0123456789"_array;
-        return options[std::rand() % options.size()];
-    };
-
-    // generate a possible temporary directory path
-    auto generate_candidate = [&]() {
-        auto leaf = "h5s3-xxxxxx"_array;
-        std::generate(std::next(leaf.begin(), 5), leaf.end(), random_char);
-        return fs::temp_directory_path() / std::string(leaf.data(), leaf.size());
-    };
-
-    fs::path out;
-    std::error_code ec;
-    while (!fs::create_directory(out = generate_candidate(), ec)) {
-        // The directory couldn't be created; this either means it already
-        // exists or an error occurred.
-        if (ec) {
-            // An error occurred, throw the exception.
-            throw std::runtime_error(ec.message());
-        }
-        // No error occurred, this means the directory already exists,
-        // try again.
-    }
-
-    return out;
-}
-
 minio::minio(const std::string_view& access_key,
              const std::string_view& secret_key,
              const std::string_view& bucket,
@@ -44,8 +14,8 @@ minio::minio(const std::string_view& access_key,
       m_test_bucket(bucket),
       m_minio_address(address),
       m_region(region),
-      m_minio_root(temp_directory()) {
-    std::string minio_config = m_minio_root / "minio-config/";
+      m_minio_root(tmpdir()) {
+    std::string minio_config = m_minio_root.path() / "minio-config/";
 
     // Start minio server.
     std::vector<std::string> args = {
@@ -56,7 +26,7 @@ minio::minio(const std::string_view& access_key,
         minio_config,
         "--address",
         m_minio_address,
-        m_minio_root / "minio-data",
+        m_minio_root.path() / "minio-data",
     };
     process::environment env = {
         {"MINIO_ACCESS_KEY", m_access_key},
@@ -68,7 +38,7 @@ minio::minio(const std::string_view& access_key,
     sleep(1);  // Give it a second to come up.
 
     // Create a bucket with mc.
-    std::string mc_config = m_minio_root / "mc-config";
+    std::string mc_config = m_minio_root.path() / "mc-config";
     auto mc_command = [&mc_config](const std::vector<std::string>& extra) {
         std::vector<std::string> argv = {
             "testbin/mc",
@@ -103,6 +73,5 @@ minio::minio(const std::string_view& access_key,
 minio::~minio() {
     m_minio_proc->terminate();
     m_minio_proc->join();
-    fs::remove_all(m_minio_root);
 }
 }  // namespace h5s3::utils

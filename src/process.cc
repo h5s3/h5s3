@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "h5s3/private/process.h"
 
 namespace h5s3::utils {
