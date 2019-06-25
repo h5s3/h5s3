@@ -7,5 +7,7 @@ elif [ -n "$CLANG" ];then
     export CXX="clang++" CC="clang"
 fi
 
-${PYTHON} -m pip install --user h5py
-${PYTHON} -m pip install --user -e bindings/python
+pip install h5py
+HDF5_INCLUDE_PATH=/usr/include/hdf5/serial/ \
+    HDF5_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial \
+    pip install -e bindings/python

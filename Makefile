@@ -171,6 +171,7 @@ gtest.a: gtest.o
 $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	cd bindings/python && \
 	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
+	HDF5_LIBRARY_PATH=$(HDF5_LIBRARY_PATH) \
 	HDF5_LIBRARY=$(HDF5_LIBRARY) \
 	CC=$(CC) \
 	CXX=$(CXX) \
@@ -178,6 +179,9 @@ $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	CXXFLAGS='$(CXXFLAGS)' \
 	LDFLAGS='$(LDFLAGS)' \
 	$(PYTHON) setup.py build_ext --inplace
+
+.PHONY: python-extension
+python-extension: $(PYTHON_EXTENSION)
 
 .PHONY: tidy
 tidy:
