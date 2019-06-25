@@ -14,6 +14,10 @@ include_dirs = ['cxx/include']
 if os.environ.get('HDF5_INCLUDE_PATH'):
     include_dirs.append(os.environ['HDF5_INCLUDE_PATH'])
 
+library_dirs = []
+if os.environ.get('HDF5_LIBRARY_PATH'):
+    library_dirs.append(os.environ['HDF5_LIBRARY_PATH'])
+
 
 def remove_empty(l):
     return [x for x in l if x]
@@ -25,6 +29,7 @@ ldflags = remove_empty(os.environ.get('LDFLAGS', '').split(' '))
 extension = Extension(
     'h5s3._h5s3',
     sources=['h5s3/_h5s3.cc'] + glob.glob('cxx/src/*.cc'),
+    library_dirs=library_dirs,
     libraries=[
         'curl',
         'crypto',
@@ -34,8 +39,11 @@ extension = Extension(
     language='c++',
     include_dirs=include_dirs,
     depends=(
-        ['cxx/.compiler_flags'] +
-        glob.glob('cxx/include/h5s3/**/*.h', recursive=True)
+        ['cxx/.compiler_flags'] + [
+            os.path.join(root, f)
+            for root, _, fs in os.walk('cxx/include/h5s3/')
+            for f in fs
+        ]
     ),
     extra_compile_args=[
         '-Wall',

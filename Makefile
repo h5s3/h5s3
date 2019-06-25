@@ -1,7 +1,7 @@
 # Put custom environment stuff here.
 -include Makefile.local
 
-PYTHON ?= python3
+PYTHON ?= python
 
 MAJOR_VERSION := 0
 MINOR_VERSION := 0
@@ -92,7 +92,7 @@ TESTRUNNER := tests/run
 ALL_SOURCES := $(SOURCES) $(EXAMPLE_SOURCES) $(TEST_SOURCES)
 ALL_HEADERS := include/h5s3/**.h
 
-PYTHON_SONAME := _h5s3$(shell $(PYTHON)-config --extension-suffix)
+PYTHON_SONAME := _h5s3$(shell $(PYTHON) etc/ext_suffix.py)
 PYTHON_EXTENSION := bindings/python/h5s3/$(PYTHON_SONAME)
 
 ALL_FLAGS := 'CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS)'
@@ -171,6 +171,7 @@ gtest.a: gtest.o
 $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	cd bindings/python && \
 	HDF5_INCLUDE_PATH=$(HDF5_INCLUDE_PATH) \
+	HDF5_LIBRARY_PATH=$(HDF5_LIBRARY_PATH) \
 	HDF5_LIBRARY=$(HDF5_LIBRARY) \
 	CC=$(CC) \
 	CXX=$(CXX) \
@@ -178,6 +179,9 @@ $(PYTHON_EXTENSION): .compiler_flags bindings/python/h5s3/_h5s3.cc
 	CXXFLAGS='$(CXXFLAGS)' \
 	LDFLAGS='$(LDFLAGS)' \
 	$(PYTHON) setup.py build_ext --inplace
+
+.PHONY: python-extension
+python-extension: $(PYTHON_EXTENSION)
 
 .PHONY: tidy
 tidy:
