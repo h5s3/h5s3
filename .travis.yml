@@ -26,12 +26,10 @@ matrix:
             - deadsnakes
             - ubuntu-toolchain-r-test
           packages:
-            - python3.5-dev
-            - python3.5-venv
             - gcc-7
             - g++-7
             - libhdf5-serial-dev
-      env: GCC=7 PYTHON=python3.5
+      env: GCC=7 PYTHON=python2.7
     - compiler: clang-5
       os: linux
       addons:
@@ -58,10 +56,8 @@ matrix:
             # we install gcc in the clang builds to get an updated libstd++
             - gcc-7
             - g++-7
-            - python3.5-dev
-            - python3.5-venv
             - libhdf5-serial-dev
-      env: CLANG=5.0 PYTHON=python3.5 PATH=/usr/local/clang-5.0.0/bin:$PATH
+      env: CLANG=5.0 PYTHON=python2.7 PATH=/usr/local/clang-5.0.0/bin:$PATH
 
 install:
   - source etc/ci-install.sh
