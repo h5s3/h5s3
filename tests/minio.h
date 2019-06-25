@@ -90,7 +90,7 @@ public:
             std::vector<std::string> argv = {
                 "testbin/mc",
                 "--quiet",
-                "--config-folder", mc_config,
+                "--config-dir", mc_config,
             };
             argv.insert(argv.end(), extra.begin(), extra.end());
             process::environment env = {{"PATH", std::getenv("PATH")}};
