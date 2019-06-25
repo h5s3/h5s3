@@ -7,7 +7,5 @@ elif [ -n "$CLANG" ];then
     export CXX="clang++" CC="clang"
 fi
 
-${PYTHON} -m venv venv
-source venv/bin/activate
-${PYTHON} -m pip install git+https://github.com/h5s3/h5py.git
-${PYTHON} -m pip install -e bindings/python
+${PYTHON} -m pip install --user h5py
+${PYTHON} -m pip install --user -e bindings/python
