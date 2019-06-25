@@ -3,6 +3,11 @@
 #include "h5s3/private/s3_driver.h"
 
 namespace {
+#if PY_MAJOR_VERSION == 2
+#define PyLong_AsLong PyInt_AsLong
+#define PyLong_AsSize_t(x) static_cast<std::size_t>(PyInt_AsSsize_t(x))
+#endif
+
 PyObject* set_fapl(PyObject*, PyObject* args) {
     PyObject* id_ob;
     PyObject* page_size_ob;
@@ -65,9 +70,16 @@ PyMethodDef module_methods[] = {
     {nullptr, nullptr, 0, nullptr},
 };
 
+const char* modname = "h5s3._h5s3";
+
+#if PY_MAJOR_VERSION == 2
+PyMODINIT_FUNC init_h5s3() {
+    Py_InitModule(modname, module_methods);
+}
+#else
 PyModuleDef module = {
     PyModuleDef_HEAD_INIT,
-    "h5s3._h5s3",
+    modname,
     nullptr,
     -1,
     module_methods,
@@ -82,4 +94,5 @@ PyInit__h5s3(void)
 {
     return PyModule_Create(&module);
 }
+#endif
 }  // namespace

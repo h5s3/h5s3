@@ -1,7 +1,7 @@
 # Put custom environment stuff here.
 -include Makefile.local
 
-PYTHON ?= python3
+PYTHON ?= python
 
 MAJOR_VERSION := 0
 MINOR_VERSION := 0
@@ -92,7 +92,7 @@ TESTRUNNER := tests/run
 ALL_SOURCES := $(SOURCES) $(EXAMPLE_SOURCES) $(TEST_SOURCES)
 ALL_HEADERS := include/h5s3/**.h
 
-PYTHON_SONAME := _h5s3$(shell $(PYTHON)-config --extension-suffix)
+PYTHON_SONAME := _h5s3$(shell $(PYTHON) etc/ext_suffix.py)
 PYTHON_EXTENSION := bindings/python/h5s3/$(PYTHON_SONAME)
 
 ALL_FLAGS := 'CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) LDFLAGS=$(LDFLAGS)'

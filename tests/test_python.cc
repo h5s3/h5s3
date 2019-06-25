@@ -39,6 +39,16 @@ public:
 };
 }  // namespace detail
 
+#if PY_MAJOR_VERSION == 2
+#define PyUnicode_FromString PyString_FromString
+#define PyUnicode_AsUTF8 PyString_AS_STRING
+
+#define CAST_CODE(co) reinterpret_cast<PyCodeObject*>(co)
+#else
+#define CAST_CODE(co) (co)
+#endif
+
+
 class PythonTest : public ::testing::Test {
 protected:
     static std::unique_ptr<minio> MINIO;
@@ -160,7 +170,7 @@ void python_test(const std::string_view& test_name,
         Py_CompileString(full_source.str().data(), __FILE__, Py_file_input));
     ASSERT_TRUE(code_object.get()) << format_current_python_exception(buf.get());
 
-    scoped_ref result(PyEval_EvalCode(code_object.get(),
+    scoped_ref result(PyEval_EvalCode(CAST_CODE(code_object.get()),
                                       PYTHON_NAMESPACE.get(),
                                       PYTHON_NAMESPACE.get()));
 

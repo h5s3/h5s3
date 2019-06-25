@@ -34,8 +34,11 @@ extension = Extension(
     language='c++',
     include_dirs=include_dirs,
     depends=(
-        ['cxx/.compiler_flags'] +
-        glob.glob('cxx/include/h5s3/**/*.h', recursive=True)
+        ['cxx/.compiler_flags'] + [
+            os.path.join(root, f)
+            for root, _, fs in os.walk('cxx/include/h5s3/')
+            for f in fs
+        ]
     ),
     extra_compile_args=[
         '-Wall',
